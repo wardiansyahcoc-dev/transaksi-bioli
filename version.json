@@ -1,0 +1,6 @@
+{
+    "version": "1.0.0",
+    "notes": "Rilis perdana:\n✅ Layout footer diperbaiki\n✅ Admin auto-logout 24 jam\n✅ Sistem auto-update",
+    "force": false,
+    "releaseDate": "2026-07-21"
+}
