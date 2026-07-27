@@ -1,5 +1,5 @@
 // sw.js - Service Worker untuk PT. BIOLI LESTARI
-const CACHE_NAME = 'bioli-app-v2.2.0'; // ⚠️ NAIKKAN SETIAP RILIS (v2.1.0 = multi-pay + CMM + fix diskon + badge versi)
+const CACHE_NAME = 'bioli-app-v2.2.0'; // ⚠️ NAIKKAN SETIAP RILIS (v2.2.0 = always-on + rotasi ikut HP)
 
 // Hanya file yang PASTI ADA di repo. JANGAN masukkan icon-512.png (tidak ada → bikin install gagal).
 const ASSETS_TO_CACHE = [
@@ -17,7 +17,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching app assets (v2.1.0)...');
+      console.log('[SW] Caching app assets (v2.2.0)...');
       return Promise.allSettled(
         ASSETS_TO_CACHE.map((url) =>
           cache.add(url).catch((err) => {
