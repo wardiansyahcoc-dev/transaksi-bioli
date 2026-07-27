@@ -1,6 +1,6 @@
 {
-  "version": "2.1.0",
-  "notes": "Update v2.1.0:\n✅ Popup Bayar multi-nota format baru (toggle %/Rp + ringkasan live)\n✅ Laporan Luar Kota: potongan cash + jatah montir dilebur jadi 1 CMM\n✅ Fix import diskon customer (baca discountCat)\n✅ Indikator versi hidup di menu ☰\n🛠️ Perbaikan install PWA & cache (icon + service worker)",
+  "version": "2.2.0",
+  "notes": "Update v2.2.0:\n✅ Popup Bayar multi-nota format baru (toggle %/Rp + ringkasan live)\n✅ Laporan Luar Kota: potongan cash + jatah montir dilebur jadi 1 CMM\n✅ Fix import diskon customer (baca discountCat)\n✅ Indikator versi hidup di menu ☰\n🛠️ Perbaikan install PWA & cache (icon + service worker)",
   "force": false,
   "releaseDate": "2026-07-27"
 }
