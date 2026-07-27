@@ -787,6 +787,18 @@ body:not(.show-bottomnav) .vb-banner{bottom:14px}
 .vb-banner .vb-b-btn{flex-shrink:0;border:0;border-radius:10px;padding:8px 12px;font-size:10px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--warning),#d97706);box-shadow:0 3px 10px rgba(217,119,6,.35)}
 .vb-banner .vb-b-btn:active{transform:scale(.95)}
 .vb-banner .vb-b-x{flex-shrink:0;border:0;background:transparent;color:var(--text-light);font-size:14px;cursor:pointer;padding:2px 4px}
+/* ===== WAKE LOCK / ALWAYS-ON TOGGLE di MENU (V2.3) ===== */
+.wl-row{display:flex;align-items:center;gap:9px;cursor:pointer}
+.wl-row .wl-ico{font-size:13px;width:18px;text-align:center;flex-shrink:0;transition:transform .25s var(--ease),filter .25s}
+.wl-row:active .wl-ico{transform:scale(.82) rotate(-14deg)}
+.wl-row .wl-lab{flex:1;min-width:0}
+.wl-st{font-size:8px;font-weight:800;color:var(--text-light);min-width:26px;text-align:right;font-family:var(--font-mono);transition:color .25s}
+.wl-sw{position:relative;flex-shrink:0;width:38px;height:21px;border-radius:20px;background:var(--border);transition:background .28s var(--ease);box-shadow:inset 0 1px 3px rgba(0,0,0,.28)}
+.wl-sw::after{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.35);transition:transform .28s var(--ease)}
+.wl-row.on .wl-sw{background:linear-gradient(135deg,var(--success),#059669)}
+.wl-row.on .wl-sw::after{transform:translateX(17px)}
+.wl-row.on .wl-ico{filter:drop-shadow(0 0 6px color-mix(in srgb,var(--success) 75%,transparent))}
+.wl-row.on .wl-st{color:var(--success)}
 </style>
 </head>
 <body>
@@ -1269,7 +1281,14 @@ if(isUnlocked){h+=`<div class="dropdown-item" onclick="doLogout();closeAllMenus(
 h+='<div class="tm-divider"></div>';
 h+=`<div class="dropdown-item${locked?' locked':''}" onclick="${locked?'lockedNav()':'navFromMenu(\'history\')'}">${locked?'🔒':'🗄️'} Database${locked?'<span class="tm-lock">🔒</span>':''}</div>`;
 m.innerHTML=h}
-function toggleModeMenu(){renderTransMenu();vb_injectMenuRow();var m=document.getElementById('modeMenu');m.classList.toggle('open');if(m.classList.contains('open'))vb_check(false)}
+function toggleModeMenu(){
+  renderTransMenu();
+  if(typeof vb_injectMenuRow==='function') vb_injectMenuRow();
+  if(typeof wl_injectMenuRow==='function') wl_injectMenuRow();
+  var m=document.getElementById('modeMenu');
+  m.classList.toggle('open');
+  if(m.classList.contains('open') && typeof vb_check==='function') vb_check(false);
+}
 /* MENU CUSTOMER DIPANGKAS: HANYA EXPORT, IMPORT, FORMAT, RESET (TANPA LAPORAN) */
 function toggleCustPageMenu(){if(!isUnlocked){alertWarning('🔒 Login dulu untuk akses menu customer!');return}const menu=document.getElementById('custPageMenu');menu.innerHTML=`<div class="tm-label">Menu Utama</div><div class="dropdown-item" onclick="custMenuAction('export')">📤 Ekspor Data</div><div class="dropdown-item" onclick="custMenuAction('import')">📥 Impor Data</div><div class="dropdown-item" onclick="custMenuAction('format')">📖 Panduan Format JSON</div><div class="tm-divider"></div><div class="tm-label">Reset & Hapus Data</div><div class="dropdown-item danger" onclick="custMenuAction('hapusBarang')">🗑️ Hapus Semua Barang</div><div class="dropdown-item danger" onclick="custMenuAction('hapusCustomer')">🗑️ Hapus Semua Customer</div><div class="dropdown-item danger" onclick="custMenuAction('resetFaktur')">🗑️ Reset Data Faktur</div><div class="dropdown-item danger" onclick="custMenuAction('resetStok')">🗑️ Reset Data Stok Barang</div>`;menu.classList.toggle('open')}
 function custMenuAction(action){document.getElementById('custPageMenu').classList.remove('open');if(!requireLogin())return;switch(action){case 'import':showImportMenu();break;case 'export':showExportMenu();break;case 'format':showFormatInfo();break;case 'resetFaktur':confirmDeleteAllHistory();break;case 'resetStok':resetAllStockFromMenu();break;case 'hapusCustomer':confirmDeleteAllCustomers();break;case 'hapusBarang':confirmDeleteAllItems();break}}
@@ -1816,6 +1835,56 @@ function vb_check(manual){
 document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){vb_injectMenuRow();vb_check(false)},400)});
 document.addEventListener('visibilitychange',function(){if(!document.hidden)vb_check(false)});
 window.addEventListener('online',function(){vb_check(false)});
+/* =========================================================
+   ALWAYS-ON / WAKE LOCK — mandiri (V2.3)
+   ========================================================= */
+var WL_ON = (localStorage.getItem('wakeLockPref') !== 'off'); // default ON
+var WL_SENTINEL = null;
+
+async function wl_acquire(){
+  if(!WL_ON) return;
+  if(!('wakeLock' in navigator)) return;
+  if(document.visibilityState !== 'visible') return;
+  if(WL_SENTINEL) return;
+  try{
+    WL_SENTINEL = await navigator.wakeLock.request('screen');
+    WL_SENTINEL.addEventListener('release', function(){ WL_SENTINEL = null; });
+  }catch(e){ WL_SENTINEL = null; /* baterai kritis / tidak diizinkan: diam saja */ }
+}
+function wl_release(){ if(WL_SENTINEL){ try{ WL_SENTINEL.release(); }catch(e){} WL_SENTINEL = null; } }
+async function wl_toggle(){
+  WL_ON = !WL_ON;
+  localStorage.setItem('wakeLockPref', WL_ON ? 'on' : 'off');
+  if(WL_ON){
+    if(!('wakeLock' in navigator)){ alertWarning('⚠️ Browser/device ini belum mendukung always-on. Preferensi tetap disimpan.'); }
+    else { await wl_acquire(); }
+  } else { wl_release(); }
+  wl_refreshMenuRow();
+}
+function wl_injectMenuRow(){
+  var m=document.getElementById('modeMenu'); if(!m) return;
+  var old=m.querySelector('.wl-row'); if(old) old.remove();
+  var row=document.createElement('div');
+  row.className='dropdown-item wl-row'+(WL_ON?' on':'');
+  row.setAttribute('onclick','event.stopPropagation();wl_toggle()');
+  row.innerHTML='<span class="wl-ico">'+(WL_ON?'🔆':'💤')+'</span><span class="wl-lab">Layar Tetap Nyala</span><span class="wl-st">'+(WL_ON?'ON':'OFF')+'</span><span class="wl-sw"></span>';
+  m.appendChild(row);
+}
+function wl_refreshMenuRow(){
+  var r=document.querySelector('.wl-row'); if(!r) return;
+  r.className='dropdown-item wl-row'+(WL_ON?' on':'');
+  var ico=r.querySelector('.wl-ico'); if(ico) ico.textContent=WL_ON?'🔆':'';
+  var st=r.querySelector('.wl-st'); if(st) st.textContent=WL_ON?'ON':'OFF';
+}
+/* re-acquire tiap app balik ke depan; lepas saat ke-background (otomatis oleh browser) */
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState==='visible'){ if(WL_ON) wl_acquire(); } else { WL_SENTINEL=null; }
+});
+/* jaminan: setelah sentuhan pertama, wake lock pasti aktif (user gesture) */
+document.addEventListener('pointerdown', function(){ if(WL_ON && !WL_SENTINEL) wl_acquire(); }, {passive:true});
+/* fallback: kalau tombol menu diklik tapi toggleModeMenu belum di-patch, baris tetap nempel */
+document.addEventListener('click', function(e){ if(e.target && e.target.closest && e.target.closest('#btnModeToggle')){ setTimeout(wl_injectMenuRow,0); } }, true);
+document.addEventListener('DOMContentLoaded', function(){ setTimeout(function(){ wl_injectMenuRow(); if(WL_ON) wl_acquire(); }, 450); });
 </script>
 </body>
 </html>
