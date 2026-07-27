@@ -759,6 +759,34 @@ body.order-mode .fr-grand .fr-label,body.order-mode .fr-grand .fr-value{color:#f
 .lk-subtotal{background:var(--accent-light);border-radius:8px;padding:8px 10px;margin:6px 0 0;display:flex;justify-content:space-between;font-weight:800;font-family:var(--font-mono)}
 .lk-grand{background:linear-gradient(135deg,#16a34a,#059669);color:#fff;border-radius:9px;padding:11px 12px;margin:10px 0;display:flex;justify-content:space-between;font-weight:800;font-family:var(--font-mono);font-size:15px}
 @media(max-width:360px){.pay-grid{grid-template-columns:1fr}.pay-summary{grid-template-columns:1fr}.pay-summary .ps-cell{flex-direction:row;justify-content:space-between;border-right:none;border-bottom:1px dashed var(--border)}.pay-summary .ps-cell:last-child{border-bottom:none}}
+/* ===== VERSION BADGE di MENU (V2.2) ===== */
+.vb-menu-row{display:flex;align-items:center;gap:8px;cursor:pointer}
+.vb-menu-row .vb-ver{font-family:var(--font-mono);font-weight:800;letter-spacing:.2px}
+.vb-menu-row .vb-st{margin-left:auto;font-size:8.5px;font-weight:800;padding:2px 7px;border-radius:20px;
+  background:var(--bg);color:var(--text-light);border:1px solid var(--border);white-space:nowrap}
+.vb-menu-row .vb-st.ok{color:var(--success);border-color:color-mix(in srgb,var(--success) 40%,var(--border));background:color-mix(in srgb,var(--success) 10%,var(--bg))}
+.vb-menu-row .vb-st.update{color:var(--warning);border-color:color-mix(in srgb,var(--warning) 45%,var(--border));background:color-mix(in srgb,var(--warning) 12%,var(--bg));animation:vb-blink 1.1s steps(2,start) infinite}
+.vb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;background:var(--text-light);transition:background .25s}
+.vb-dot.ok{background:var(--success);box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 60%,transparent);animation:vb-pulse 2.4s ease-out infinite}
+.vb-dot.update{background:var(--warning);animation:vb-blink 1s steps(2,start) infinite}
+.vb-dot.offline{background:var(--text-light);opacity:.5}
+.vb-dot.idle{background:var(--text-light);opacity:.7}
+@keyframes vb-pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 55%,transparent)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes vb-blink{0%,100%{opacity:1}50%{opacity:.3}}
+/* banner update (tidur sampai ada versi baru) */
+.vb-banner{position:fixed;left:10px;right:10px;bottom:calc(var(--nav-h) + 12px + env(safe-area-inset-bottom));z-index:1500;
+  display:none;align-items:center;gap:10px;padding:11px 12px;border-radius:14px;
+  background:linear-gradient(135deg,var(--surface),color-mix(in srgb,var(--surface) 90%,var(--warning)));
+  border:1px solid color-mix(in srgb,var(--warning) 45%,var(--border));box-shadow:0 12px 34px rgba(0,0,0,.32);animation:vb-slide .35s var(--ease)}
+body:not(.show-bottomnav) .vb-banner{bottom:14px}
+.vb-banner.show{display:flex}
+@keyframes vb-slide{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.vb-banner .vb-b-ico{font-size:18px;flex-shrink:0}
+.vb-banner .vb-b-txt{flex:1;min-width:0;font-size:10.5px;line-height:1.35;color:var(--text)}
+.vb-banner .vb-b-txt b{color:var(--primary);font-family:var(--font-mono)}
+.vb-banner .vb-b-btn{flex-shrink:0;border:0;border-radius:10px;padding:8px 12px;font-size:10px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--warning),#d97706);box-shadow:0 3px 10px rgba(217,119,6,.35)}
+.vb-banner .vb-b-btn:active{transform:scale(.95)}
+.vb-banner .vb-b-x{flex-shrink:0;border:0;background:transparent;color:var(--text-light);font-size:14px;cursor:pointer;padding:2px 4px}
 </style>
 </head>
 <body>
@@ -1241,7 +1269,7 @@ if(isUnlocked){h+=`<div class="dropdown-item" onclick="doLogout();closeAllMenus(
 h+='<div class="tm-divider"></div>';
 h+=`<div class="dropdown-item${locked?' locked':''}" onclick="${locked?'lockedNav()':'navFromMenu(\'history\')'}">${locked?'🔒':'🗄️'} Database${locked?'<span class="tm-lock">🔒</span>':''}</div>`;
 m.innerHTML=h}
-function toggleModeMenu(){renderTransMenu();document.getElementById('modeMenu').classList.toggle('open')}
+function toggleModeMenu(){renderTransMenu();vb_injectMenuRow();var m=document.getElementById('modeMenu');m.classList.toggle('open');if(m.classList.contains('open'))vb_check(false)}
 /* MENU CUSTOMER DIPANGKAS: HANYA EXPORT, IMPORT, FORMAT, RESET (TANPA LAPORAN) */
 function toggleCustPageMenu(){if(!isUnlocked){alertWarning('🔒 Login dulu untuk akses menu customer!');return}const menu=document.getElementById('custPageMenu');menu.innerHTML=`<div class="tm-label">Menu Utama</div><div class="dropdown-item" onclick="custMenuAction('export')">📤 Ekspor Data</div><div class="dropdown-item" onclick="custMenuAction('import')">📥 Impor Data</div><div class="dropdown-item" onclick="custMenuAction('format')">📖 Panduan Format JSON</div><div class="tm-divider"></div><div class="tm-label">Reset & Hapus Data</div><div class="dropdown-item danger" onclick="custMenuAction('hapusBarang')">🗑️ Hapus Semua Barang</div><div class="dropdown-item danger" onclick="custMenuAction('hapusCustomer')">🗑️ Hapus Semua Customer</div><div class="dropdown-item danger" onclick="custMenuAction('resetFaktur')">🗑️ Reset Data Faktur</div><div class="dropdown-item danger" onclick="custMenuAction('resetStok')">🗑️ Reset Data Stok Barang</div>`;menu.classList.toggle('open')}
 function custMenuAction(action){document.getElementById('custPageMenu').classList.remove('open');if(!requireLogin())return;switch(action){case 'import':showImportMenu();break;case 'export':showExportMenu();break;case 'format':showFormatInfo();break;case 'resetFaktur':confirmDeleteAllHistory();break;case 'resetStok':resetAllStockFromMenu();break;case 'hapusCustomer':confirmDeleteAllCustomers();break;case 'hapusBarang':confirmDeleteAllItems();break}}
@@ -1672,7 +1700,7 @@ let stockSearchTimeout=null;function debounceStockSearch(){clearTimeout(stockSea
 /* ===== IMPORT / EXPORT / BACKUP ===== */
 function showFormatInfo(){enqueuePopup({type:'info',title:'📖 Panduan Format',message:'Format JSON atau Excel (.xlsx)'})}
 function handleFileImport(input){const file=input.files[0];if(!file)return;const type=input.getAttribute('data-type'),isExcel=/\.xlsx?$/i.test(file.name),reader=new FileReader();if(isExcel){reader.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});processUnifiedImport(type,XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))}catch(err){alertDanger('❌ File Excel tidak valid!')}};reader.readAsArrayBuffer(file)}else{reader.onload=e=>{try{processUnifiedImport(type,JSON.parse(e.target.result))}catch(err){alertDanger('❌ JSON tidak valid!')}};reader.readAsText(file)}}
-function processUnifiedImport(type,data){if(!requireLogin())return;if(!Array.isArray(data))return alertDanger('Format salah!');if(type==='item'){let added=0;data.forEach(item=>{if(!item.name)return;items.push({name:item.name,cat:item.cat||'UMUM',subCat:item.subCat||'',code:item.code||'',size:item.size||'',desc:item.desc||'',price:parseFloat(item.price)||0,minStock:5});if(stockData[item.name]===undefined)stockData[item.name]=parseInt(item.stock)||0;added++});localStorage.setItem('masterItems',JSON.stringify(items));saveStockData();renderTable('item');renderStockTable();alertSuccess(`📥 ${added} barang diimport`)}else if(type==='cust'){let added=0;data.forEach(raw=>{const code=(raw.code||'').toString().trim().toUpperCase();const name=(raw.name||'').toString().trim().toUpperCase();if(!code||!name)return;customers.push({code,name,tempo:parseInt(raw.tempo)||30,disc:raw.disc||{},sales:raw.sales||''});added++});localStorage.setItem('masterCust',JSON.stringify(customers));renderTable('cust');alertSuccess(`📥 ${added} customer diimport`)}else if(type==='history'){const hist=JSON.parse(localStorage.getItem('txHistory'))||[];let c=0;data.forEach(tx=>{if(tx.date&&tx.invNo&&tx.rows&&!hist.find(h=>h.invNo===tx.invNo)){tx._imported=true;tx._source='import';tx.region=pendingImportRegion;hist.push(tx);c++}});localStorage.setItem('txHistory',JSON.stringify(hist));loadHistory();alertSuccess(`📥 ${c} faktur diimport`)}}
+function processUnifiedImport(type,data){if(!requireLogin())return;if(!Array.isArray(data))return alertDanger('Format salah!');if(type==='item'){let added=0;data.forEach(item=>{if(!item.name)return;items.push({name:item.name,cat:item.cat||'UMUM',subCat:item.subCat||'',code:item.code||'',size:item.size||'',desc:item.desc||'',price:parseFloat(item.price)||0,minStock:5});if(stockData[item.name]===undefined)stockData[item.name]=parseInt(item.stock)||0;added++});localStorage.setItem('masterItems',JSON.stringify(items));saveStockData();renderTable('item');renderStockTable();alertSuccess(`📥 ${added} barang diimport`)}else if(type==='cust'){let added=0;data.forEach(raw=>{const code=(raw.code||'').toString().trim().toUpperCase();const name=(raw.name||'').toString().trim().toUpperCase();if(!code||!name)return;customers.push({code,name,tempo:parseInt(raw.tempo)||30,disc:(function(){var o={},A=raw.discountCat||raw.discCat||raw.discs;if(Array.isArray(A)){A.forEach(function(d){var k=String(d.cat||d.category||'').trim().toUpperCase(),v=parseFloat(d.discount!=null?d.discount:d.disc)||0;if(k&&v>0)o[k]=v})}else if(raw.disc&&typeof raw.disc==='object'){Object.keys(raw.disc).forEach(function(k){var v=parseFloat(raw.disc[k])||0;if(v>0)o[String(k).trim().toUpperCase()]=v})}return o})(),sales:String(raw.sales||'').trim()});added++});localStorage.setItem('masterCust',JSON.stringify(customers));renderTable('cust');alertSuccess(`📥 ${added} customer diimport`)}else if(type==='history'){const hist=JSON.parse(localStorage.getItem('txHistory'))||[];let c=0;data.forEach(tx=>{if(tx.date&&tx.invNo&&tx.rows&&!hist.find(h=>h.invNo===tx.invNo)){tx._imported=true;tx._source='import';tx.region=pendingImportRegion;hist.push(tx);c++}});localStorage.setItem('txHistory',JSON.stringify(hist));loadHistory();alertSuccess(`📥 ${c} faktur diimport`)}}
 function doExport(type){if(!requireLogin())return;let data,fn;if(type==='item')data=items,fn='barang.json';else if(type==='cust')data=customers,fn='customer.json';else if(type==='history')data=JSON.parse(localStorage.getItem('txHistory'))||[],fn='faktur.json';else return;const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=fn;a.click();URL.revokeObjectURL(url);alertSuccess('📤 Ekspor berhasil!')}
 function doBackupAll(){if(!requireLogin())return;const backup={_backup:true,_timestamp:new Date().toISOString(),masterItems:items,masterCust:customers,stockData,stockLog,txHistory:JSON.parse(localStorage.getItem('txHistory'))||[]};const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='bioli_backup.json';a.click();URL.revokeObjectURL(url);alertSuccess('💾 Backup berhasil!')}
 function showExportMenu(){if(!requireLogin())return;enqueuePopup({type:'question',title:'📤 Ekspor',message:'Pilih data:',buttons:[{text:'📦 Barang',cls:'primary',action:'item'},{text:'👥 Customer',cls:'secondary',action:'cust'},{text:'📄 Faktur',cls:'secondary',action:'history'},{text:'💾 Backup',cls:'primary',action:'backup'}],callback:a=>{if(a==='backup')doBackupAll();else if(a)doExport(a)}})}
@@ -1731,6 +1759,63 @@ document.addEventListener('DOMContentLoaded',function(){try{initTheme();if(!loca
 window.addEventListener('beforeunload',function(e){if(loginDuration==='session')sessionStorage.removeItem('loginSession');if(hasUnsavedTransaction()){e.preventDefault();e.returnValue='⚠️ Transaksi belum disimpan!';return e.returnValue}});
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isUnlocked&&!checkLoginSession()){isUnlocked=false;disableAppFeatures();updateLoginUI();alertWarning('⚠️ Sesi berakhir. Login kembali.')}});
+/* =========================================================
+   VERSION BADGE — hidup di MENU ☰ halaman utama (V2.2)
+   ========================================================= */
+var APP_VERSION = '2.1.0';        // ⬅️ NAIKKAN INI SETIAP RILIS
+var VB_STATUS = 'idle';           // idle | ok | update | offline
+var VB_SERVER = null;
+
+function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
+function vb_statusText(){if(VB_STATUS==='ok')return 'terbaru';if(VB_STATUS==='update')return 'ada v'+VB_SERVER;if(VB_STATUS==='offline')return 'offline';return 'cek…'}
+function vb_injectMenuRow(){
+  var m=document.getElementById('modeMenu');if(!m)return;
+  var old=m.querySelector('.vb-menu-row');if(old)old.remove();
+  var d=m.querySelector('.tm-divider:last-of-type');
+  var row=document.createElement('div');
+  row.className='dropdown-item vb-menu-row';
+  row.setAttribute('onclick','vb_tap()');
+  row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';
+  m.appendChild(row);
+}
+function vb_refreshMenuRow(){var r=document.querySelector('.vb-menu-row');if(!r)return;var dot=r.querySelector('.vb-dot'),st=r.querySelector('.vb-st');if(dot)dot.className='vb-dot '+VB_STATUS;if(st){st.className='vb-st '+VB_STATUS;st.textContent=vb_statusText()}}
+function vb_banner(){
+  var b=document.getElementById('vbBanner');
+  if(!b){b=document.createElement('div');b.id='vbBanner';b.className='vb-banner';
+    b.innerHTML='<span class="vb-b-ico">⬆️</span><span class="vb-b-txt">Versi baru <b id="vbNewVer"></b> tersedia. Ketuk <b>Muat Ulang</b> untuk pakai fitur terbaru.</span><button class="vb-b-btn" onclick="vb_apply()">Muat Ulang</button><button class="vb-b-x" onclick="vb_dismiss()" aria-label="tutup">✕</button>';
+    document.body.appendChild(b);}
+  var nv=document.getElementById('vbNewVer');if(nv)nv.textContent='v'+VB_SERVER;
+  if(VB_STATUS==='update')b.classList.add('show');else b.classList.remove('show');
+}
+function vb_set(status,server){VB_STATUS=status;if(server)VB_SERVER=server;vb_refreshMenuRow();vb_banner()}
+function vb_tap(){
+  closeAllMenus();
+  var msg='📦 Versi terpasang: <b>v'+APP_VERSION+'</b>';
+  if(VB_STATUS==='update')msg+='<br>🆕 Versi server: <b>v'+VB_SERVER+'</b> — ada pembaruan.';
+  else if(VB_STATUS==='ok')msg+='<br>✅ Sudah yang terbaru.';
+  else if(VB_STATUS==='offline')msg+='<br>📴 Offline — tidak bisa cek server.';
+  else msg+='<br>⏳ Sedang mengecek…';
+  enqueuePopup({type:'info',title:'ℹ️ Versi Aplikasi',message:msg,
+    buttons:[{text:'Cek Sekarang',cls:'secondary',action:'check'},{text:'Tutup',cls:'primary',action:'ok'}],
+    callback:function(a){if(a==='check')vb_check(true)}});
+}
+function vb_dismiss(){var b=document.getElementById('vbBanner');if(b)b.classList.remove('show')}
+async function vb_apply(){
+  try{if('serviceWorker' in navigator){var regs=await navigator.serviceWorker.getRegistrations();for(var i=0;i<regs.length;i++){try{await regs[i].unregister()}catch(e){}}}}catch(e){}
+  try{if('caches' in window){var keys=await caches.keys();await Promise.all(keys.map(function(k){return caches.delete(k)}))}}catch(e){}
+  var u=new URL(location.href);u.searchParams.set('_r',Date.now());location.replace(u.toString());
+}
+function vb_check(manual){
+  if(!navigator.onLine){vb_set('offline');if(manual)alertWarning('📴 Offline — tidak bisa cek versi server.');return}
+  fetch('./version.json?_='+Date.now(),{cache:'no-store'}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
+    var sv=(j&&j.version)||null;
+    if(sv&&vb_cmp(sv,APP_VERSION)>0){vb_set('update',sv);if(manual)alertWarning('🆕 Versi baru <b>v'+sv+'</b> tersedia.')}
+    else{vb_set('ok',sv||APP_VERSION);if(manual)alertSuccess('✅ Sudah versi terbaru (v'+APP_VERSION+').')}
+  }).catch(function(){vb_set('offline');if(manual)alertDanger('Gagal menghubungi server versi.')});
+}
+document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){vb_injectMenuRow();vb_check(false)},400)});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)vb_check(false)});
+window.addEventListener('online',function(){vb_check(false)});
 </script>
 </body>
 </html>

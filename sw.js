@@ -1,5 +1,5 @@
 // sw.js - Service Worker untuk PT. BIOLI LESTARI
-const CACHE_NAME = 'bioli-app-v2.1.0'; // ⚠️ NAIKKAN SETIAP UPDATE (v2.1.0 = multi-pay + CMM luar kota)
+const CACHE_NAME = 'bioli-app-v2.1.0'; // ⚠️ NAIKKAN SETIAP RILIS (v2.1.0 = multi-pay + CMM + fix diskon + badge versi)
 
 // Hanya file yang PASTI ADA di repo. JANGAN masukkan icon-512.png (tidak ada → bikin install gagal).
 const ASSETS_TO_CACHE = [
