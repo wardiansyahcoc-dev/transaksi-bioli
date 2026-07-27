@@ -1,6 +1,6 @@
 {
-  "version": "2.2.0",
-  "notes": "Update v2.2.0:\n✅ Always-on: layar tetap nyala saat app terbuka (toggle di menu ☰)\n✅ Rotasi otomatis mengikuti setting HP (tidak muter sendiri lagi)\n✅ Popup Bayar multi-nota format baru\n✅ CMM gabungan di Laporan Luar Kota\n✅ Fix import diskon customer\n✅ Indikator versi di menu ☰\n🛠️ Perbaikan install PWA & cache",
+  "version": "2.3.2",
+  "notes": "Update v2.3.2:\n✅ Always-on: layar tetap nyala saat app terbuka (toggle di menu ☰)\n✅ Rotasi otomatis mengikuti setting HP (tidak muter sendiri lagi)\n✅ Popup Bayar multi-nota format baru\n✅ CMM gabungan di Laporan Luar Kota\n✅ Fix import diskon customer\n✅ Indikator versi di menu ☰\n🛠️ Perbaikan install PWA & cache",
   "force": false,
   "releaseDate": "2026-07-27"
 }

@@ -1,5 +1,5 @@
 // sw.js - Service Worker untuk PT. BIOLI LESTARI
-const CACHE_NAME = 'bioli-app-v2.2.0'; // ⚠️ NAIKKAN SETIAP RILIS (v2.2.0 = always-on + rotasi ikut HP)
+const CACHE_NAME = 'bioli-app-v2.3.2'; // ⚠️ NAIKKAN SETIAP RILIS (v2.2.0 = always-on + rotasi ikut HP)
 
 // Hanya file yang PASTI ADA di repo. JANGAN masukkan icon-512.png (tidak ada → bikin install gagal).
 const ASSETS_TO_CACHE = [
