@@ -17,7 +17,7 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching app assets (v2.2.0)...');
+      console.log('[SW] Caching app assets (v2.3.2)...');
       return Promise.allSettled(
         ASSETS_TO_CACHE.map((url) =>
           cache.add(url).catch((err) => {
