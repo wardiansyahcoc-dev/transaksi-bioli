@@ -1,6 +1,14 @@
 {
-  "version": "2.3.2",
-  "notes": "Update v2.3.2:\n✅ Always-on: layar tetap nyala saat app terbuka (toggle di menu ☰)\n✅ Rotasi otomatis mengikuti setting HP (tidak muter sendiri lagi)\n✅ Popup Bayar multi-nota format baru\n✅ CMM gabungan di Laporan Luar Kota\n✅ Fix import diskon customer\n✅ Indikator versi di menu ☰\n🛠️ Perbaikan install PWA & cache",
-  "force": false,
-  "releaseDate": "2026-07-27"
+  "version": "2.6.0",
+  "releaseDate": "2026-07-28",
+  "minVersion": "2.5.0",
+  "forceUpdate": false,
+  "channel": "stable",
+  "notes": [
+    "Panduan Format JSON jadi halaman penuh (rinci + tombol Salin).",
+    "Ongkir tampil di detail nota, gambar share & badge riwayat (baca field ongkir / shippingCost).",
+    "Sales tampil di kartu pelanggan, detail nota & gambar faktur.",
+    "Tombol Order & Pelunasan kini Share teks ke WhatsApp; pratinjau faktur bisa Kirim gambar ke WA.",
+    "Login 1-minggu tahan banting (tetap masuk walau storage ter-wipe saat di-background)."
+  ]
 }

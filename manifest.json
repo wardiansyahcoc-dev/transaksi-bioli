@@ -1,26 +1,29 @@
 {
-  "name": "Sistem Transaksi PT. BIOLI LESTARI",
-  "short_name": "Transaksi Bioli",
-  "description": "Aplikasi transaksi dan manajemen stok PT. Bioli Lestari",
-  "start_url": "./index.html",
-  "scope": "./",
-  "display": "standalone",
-  "background_color": "#f1f5f9",
-  "theme_color": "#1e293b",
-  "categories": ["business", "productivity", "finance"],
-  "lang": "id-ID",
+  "name": "Sistem Transaksi - PT. BIOLI LESTARI",
+  "short_name": "Bioli Transaksi",
+  "description": "Aplikasi transaksi, stok, pelanggan & laporan PT. Bioli Lestari. Bisa jalan offline.",
+  "lang": "id",
   "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "categories": ["business", "finance", "productivity", "utilities"],
   "icons": [
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
@@ -28,19 +31,16 @@
     {
       "name": "Transaksi Baru",
       "short_name": "Transaksi",
-      "description": "Buat transaksi baru",
-      "url": "./index.html#input",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "description": "Buka halaman input transaksi",
+      "url": "./#input",
+      "icons": [{ "src": "icon.svg", "sizes": "any" }]
     },
     {
       "name": "Riwayat",
       "short_name": "Riwayat",
-      "description": "Lihat riwayat transaksi",
-      "url": "./index.html#history",
-      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+      "description": "Lihat riwayat faktur & pembayaran",
+      "url": "./#history",
+      "icons": [{ "src": "icon.svg", "sizes": "any" }]
     }
-  ],
-  "screenshots": [],
-  "related_applications": [],
-  "prefer_related_applications": false
+  ]
 }
