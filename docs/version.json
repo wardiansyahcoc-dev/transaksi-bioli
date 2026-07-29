@@ -1,14 +1,74 @@
 {
-  "version": "2.6.0",
-  "releaseDate": "2026-07-28",
-  "minVersion": "2.5.0",
+  "version": "2.8.0",
+  "releaseDate": "2026-07-29",
+  "minVersion": "2.6.0",
+  "changelog": [
+    {
+      "version": "2.8.0",
+      "date": "2026-07-29",
+      "changes": [
+        "🎨 Sistem icon KOHEREN: semua chrome navigasi/aksi/filter/tab pakai SVG garis tipis",
+        "🏷️ Icon kategori (tombol + dropdown) → SVG tag/grid",
+        "💡 Layar Tetap Nyala → SVG bohlam (nyala amber saat ON, redup saat OFF)",
+        "🔄 Quick-Stock tabs → SVG (Set/In/Out/Log/Del)",
+        "📱 Footer transaksi (Ongkir/Bank/KIRIM WA/BAYAR) → SVG",
+        " Dropdown filter riwayat & status stok → full SVG",
+        "🔧 Tidak ada duplikat fungsi (renderTransMenu / wl_* satu versi)",
+        "✨ Hover effect pada icon menu (scale + rotate halus)",
+        "🎯 Emoji dipertahankan hanya di: konten data, popup, toggle Mode Gelap, dokumen faktur"
+      ]
+    },
+    {
+      "version": "2.7.2",
+      "date": "2026-07-29",
+      "changes": [
+        "🐛 FIX icon Retur/Login/Logout yang masih emoji",
+        "🔒 Tambah icon gembok kecil di item menu yang terkunci",
+        "💡 Layar Tetap Nyala pakai SVG bohlam (nyala amber saat ON)",
+        "🎨 Tambah CSS hover effect untuk icon"
+      ]
+    },
+    {
+      "version": "2.7.1",
+      "date": "2026-07-29",
+      "changes": [
+        "🐛 FIX icon database/pelanggan yang hilang di halaman Barang & Customer",
+        "📍 Pindah SVG defs ke <head> agar siap sebelum JS render",
+        "🎨 Tambah CSS rules untuk semua container icon"
+      ]
+    },
+    {
+      "version": "2.7.0",
+      "date": "2026-07-29",
+      "changes": [
+        "📲 Tombol KIRIM WA langsung dari halaman utama (1 klik, off-screen render)",
+        " FIX bug tanggal jatuh tempo (tempoForTx → notaDueDate)",
+        "🛠️ JSON Converter embedded di halaman Pelanggan",
+        "🎨 Tema converter nyatu light/dark aplikasi",
+        "📥 Impor langsung dari converter (pakai aturan existing)"
+      ]
+    },
+    {
+      "version": "2.6.1",
+      "date": "2026-07-20",
+      "changes": [
+        "🧾 Stamp LUNAS/BELUM LUNAS dipindah ke dalam summary-box",
+        "🚚 Rincian ongkir dipindah di bawah TOTAL",
+        " html2canvas scale 2.5x untuk ketajaman share WA"
+      ]
+    },
+    {
+      "version": "2.6.0",
+      "date": "2026-07-10",
+      "changes": [
+        "📖 Format guide untuk impor data",
+        " Mode PI (Potong Item)",
+        "💳 Multi-pay dari riwayat",
+        "🌙 Dark mode enhancement"
+      ]
+    }
+  ],
+  "downloadUrl": "https://github.com/USERNAME/bioli-lestari/releases/tag/v2.8.0",
   "forceUpdate": false,
-  "channel": "stable",
-  "notes": [
-    "Panduan Format JSON jadi halaman penuh (rinci + tombol Salin).",
-    "Ongkir tampil di detail nota, gambar share & badge riwayat (baca field ongkir / shippingCost).",
-    "Sales tampil di kartu pelanggan, detail nota & gambar faktur.",
-    "Tombol Order & Pelunasan kini Share teks ke WhatsApp; pratinjau faktur bisa Kirim gambar ke WA.",
-    "Login 1-minggu tahan banting (tetap masuk walau storage ter-wipe saat di-background)."
-  ]
+  "message": "Versi terbaru dengan sistem icon SVG yang seragam & rapi!"
 }
