@@ -1032,6 +1032,16 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{
 #page-customer:has(#custConverterView[style*="flex"]) .pro-header{
   display:none;
 }
+/* === v2.9.2-fix: nomor nota ringkas di layar kecil (setinggi chip tanggal) === */
+@media(max-width:480px){
+  .header-top-row{gap:8px}
+  .inv-control{height:24px;border-radius:7px}
+  #invPrefix{font-size:7px;padding:0 4px;min-width:0;letter-spacing:-.2px}
+  #invNumInput{width:40px;min-width:40px;font-size:10.5px}
+  .inv-step-btn{width:22px}
+  .inv-step-btn svg{width:12px;height:12px}
+  .ca-line{font-size:9px}
+}
 </style>
 
 <!-- === SVG ICON DEFINITIONS (stroke-based, di <head> agar siap sebelum JS render) === -->
