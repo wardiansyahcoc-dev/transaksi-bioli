@@ -1,77 +1,157 @@
-/* =====================================================================
-   PT. BIOLI LESTARI — Service Worker  (v2.6.0)
-   ---------------------------------------------------------------------
+/* ============================================================
+   PT. BIOLI LESTARI — Service Worker v2.8.0
    Strategi:
-   • Navigasi (buka halaman)  -> network-first, fallback ke cache (offline).
-     Artinya: begitu ada HTML baru di server, langsung kepakai saat dibuka.
-   • version.json             -> selalu network (biar polling auto-update akurat).
-   • Asset & library (font, html2canvas, xlsx) -> cache-first.
-     Artinya: setelah pertama kali load, aplikasi bisa jalan TANPA sinyal.
-   • Service worker memperbarui dirinya sendiri di latar belakang.
-   ===================================================================== */
-const CACHE = 'bioli-v2.6.0';                 // ganti bareng versi biar cache lama kebuang
-const SHELL = ['./', './index.html', './manifest.json', './icon.svg'];
-const CDN = ['fonts.googleapis.com', 'fonts.gstatic.com', 'cdnjs.cloudflare.com'];
+     • HTML / version.json → Network-first (selalu fresh)
+     • CDN fonts & libs    → Cache-first (jarang berubah)
+     • Gambar              → Stale-while-revalidate
+     • Fallback SPA        → index.html
+   ============================================================ */
+const APP_VERSION = '2.8.0';
+const CACHE_STATIC = 'bioli-static-v2.8.0';
+const CACHE_RUNTIME = 'bioli-runtime-v1';
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((c) =>
-      // precache shell; kalau ada file yang belum ke-upload, jangan sampai install gagal
-      c.addAll(SHELL).catch(() => Promise.all(SHELL.map((u) => c.add(u).catch(() => undefined))))
-    ).then(() => self.skipWaiting())
+// Asset yang langsung di-cache saat install (precache)
+const PRECACHE_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json',
+  './version.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
+  'https://cdn.jsdelivr.net/npm/@fontsource/inter/400.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/inter/500.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/inter/600.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/inter/700.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/inter/800.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/500.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono/700.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk/500.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk/600.css',
+  'https://cdn.jsdelivr.net/npm/@fontsource/space-grotesk/700.css'
+];
+
+// ===== INSTALL =====
+self.addEventListener('install', (event) => {
+  console.log('[SW] Installing v' + APP_VERSION);
+  event.waitUntil(
+    caches.open(CACHE_STATIC)
+      .then(cache => cache.addAll(PRECACHE_ASSETS))
+      .then(() => self.skipWaiting())
+      .catch(err => console.warn('[SW] Precache gagal:', err))
   );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+// ===== ACTIVATE — hapus cache lama =====
+self.addEventListener('activate', (event) => {
+  console.log('[SW] Activating v' + APP_VERSION);
+  const currentCaches = [CACHE_STATIC, CACHE_RUNTIME];
+  event.waitUntil(
+    caches.keys().then(names =>
+      Promise.all(
+        names.filter(n => !currentCaches.includes(n))
+             .map(n => { console.log('[SW] Hapus cache lama:', n); return caches.delete(n); })
+      )
     ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (e) => {
-  const req = e.request;
-  if (req.method !== 'GET') return;            // abaikan POST dll
-  const url = new URL(req.url);
+// ===== FETCH =====
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  if (request.method !== 'GET') return;
 
-  // 1) version.json: selalu minta ke jaringan (jangan di-cache SW)
-  if (url.pathname.endsWith('/version.json')) {
-    e.respondWith(fetch(req));
+  const url = new URL(request.url);
+
+  // version.json → network-first (biar checker update jalan)
+  if (url.pathname.endsWith('version.json')) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
-  // 2) Navigasi: network-first -> kalau offline, pakai halaman yang ter-cache
-  if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put('./index.html', copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match('./index.html').then((r) => r || caches.match('./')))
-    );
+  // HTML / root path → network-first + fallback ke cache
+  if (request.headers.get('accept')?.includes('text/html') ||
+      url.pathname === '/' || url.pathname.endsWith('.html')) {
+    event.respondWith(networkFirst(request, './index.html'));
     return;
   }
 
-  // 3) Asset & library: cache-first -> hemat kuota & bisa offline
-  const isCDN = CDN.some((h) => url.hostname === h || url.hostname.endsWith('.' + h));
-  e.respondWith(
-    caches.match(req).then((cached) => {
-      if (cached) return cached;
-      return fetch(req).then((res) => {
-        if (res && res.ok && (url.origin === self.location.origin || isCDN)) {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-        }
-        return res;
-      }).catch(() => cached);
-    })
-  );
+  // CDN (fontsource, cdnjs, jsdelivr) → cache-first
+  if (url.origin !== location.origin &&
+      (url.href.includes('cdn.jsdelivr.net') ||
+       url.href.includes('cdnjs.cloudflare.com') ||
+       url.href.includes('fonts.googleapis.com') ||
+       url.href.includes('fonts.gstatic.com'))) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Gambar (logo, icon, screenshot) → stale-while-revalidate
+  if (request.destination === 'image') {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  // JSON lokal (manifest, dll) → cache-first
+  if (url.pathname.endsWith('.json')) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Default → stale-while-revalidate
+  event.respondWith(staleWhileRevalidate(request));
 });
 
-// Pesan dari halaman (opsional): paksa ambil versi terbaru
-self.addEventListener('message', (e) => {
-  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+// ===== STRATEGI =====
+
+// Network-first: coba network, fallback cache
+async function networkFirst(request, fallbackUrl) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const clone = response.clone();
+      const cache = await caches.open(CACHE_RUNTIME);
+      cache.put(request, clone);
+    }
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    if (fallbackUrl) return caches.match(fallbackUrl);
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+// Cache-first: ambil cache, kalau ga ada baru fetch
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const clone = response.clone();
+      const cache = await caches.open(CACHE_STATIC);
+      cache.put(request, clone);
+    }
+    return response;
+  } catch (err) {
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+// Stale-while-revalidate: tampilkan cache dulu, update di background
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_RUNTIME);
+  const cached = await cache.match(request);
+  const fetchPromise = fetch(request).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  }).catch(() => cached);
+  return cached || fetchPromise;
+}
+
+// ===== MESSAGE HANDLER (untuk trigger update manual) =====
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
