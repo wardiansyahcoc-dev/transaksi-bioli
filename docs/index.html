@@ -21,7 +21,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <!--
   =====================================================================
-   PT. BIOLI LESTARI — Sistem Transaksi  •  v2.9.2  (ALL-SVG ICONS)
+   PT. BIOLI LESTARI — Sistem Transaksi  •  v2.9.3  (ALL-SVG ICONS)
   =====================================================================
    • HAPUS: tombol "Share WA" di action bar atas (faktur/retur/PI) —
      share cukup lewat tombol KIRIM WA di bawah (tidak lagi dobel).
@@ -824,7 +824,7 @@ body.app-ready #initGuard{opacity:0;visibility:hidden;pointer-events:none;transf
 .ac-custinfo div{display:flex;gap:7px}
 .ac-custinfo b{color:#475569;min-width:88px;font-weight:600}
 .ac-custinfo b.val{color:#0f172a;font-weight:700;text-transform:uppercase}
-/*  v2.9.2: blok tabel per sub-kategori pada tampilan nota */
+/*  v2.9.3: blok tabel per sub-kategori pada tampilan nota */
 .ac-group-block{margin-bottom:16px;break-inside:avoid}
 .ac-group-block .ac-table{margin-bottom:0}
 .ac-group-title{display:flex;align-items:center;gap:9px;font-family:'Space Grotesk',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.6px;color:#1e293b;margin-bottom:6px;padding:6px 11px;background:#f1f5f9;border-left:3px solid #3b82f6;border-radius:0 6px 6px 0}
@@ -1032,7 +1032,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{
 #page-customer:has(#custConverterView[style*="flex"]) .pro-header{
   display:none;
 }
-/* === v2.9.2-fix: nomor nota ringkas di layar kecil (setinggi chip tanggal) === */
+/* === v2.9.3-fix: nomor nota ringkas di layar kecil (setinggi chip tanggal) === */
 @media(max-width:480px){
   .header-top-row{gap:8px}
   .inv-control{height:24px;border-radius:7px}
@@ -1042,6 +1042,12 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{
   .inv-step-btn svg{width:12px;height:12px}
   .ca-line{font-size:9px}
 }
+/* === v2.9.3-fix: pemisah BANDUNG • WA pakai SVG (kebaca di semua HP) === */
+.ca-dot-ico{width:4px;height:4px;flex-shrink:0;color:var(--text-light);opacity:.6;margin:0 1px}
+/* === v2.9.3-fix: kolom CMM rata sama kolom lain + select kecil === */
+.pay-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.pay-grid .pay-special-row select{flex:0 0 50px;width:50px!important;min-width:50px;max-width:50px;padding:0 2px;text-align:center}
+.pay-grid .pay-special-row input{flex:1 1 0;min-width:0}
 </style>
 
 <!-- === SVG ICON DEFINITIONS (stroke-based, di <head> agar siap sebelum JS render) === -->
@@ -1122,7 +1128,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi • v2.9.2</div>
+    <div class="sp-tag">Sistem Transaksi • v2.9.3</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem…</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -1142,10 +1148,9 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{
           <div class="company-info">
             <div class="company-title"><h2>PT. BIOLI LESTARI</h2></div>
             <div class="company-address">
-              <div class="ca-line">PERUMAHAN TKK BLOCK P1 NO. 7</div>
               <div class="ca-line">
                 <span class="ca-loc"><svg class="ca-ico"><use href="#icon-map-pin"/></svg>BANDUNG</span>
-                <span class="ca-dot">•</span>
+                  <svg class="ca-dot-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="currentColor"/></svg>
                 <a class="ca-wa" href="https://wa.me/6281584224616" target="_blank" rel="noopener noreferrer"><svg class="ca-ico"><use href="#icon-phone"/></svg>081584224616</a>
               </div>
             </div>
@@ -1155,7 +1160,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{
             <div class="inv-control"><span id="invPrefix">BDG/G/</span><input type="text" id="invNumInput" value="0001" autocomplete="off" onfocus="onInvNumFocus()" oninput="onInvNumChange()"><button class="inv-step-btn" onclick="invStep(-1)" aria-label="Kurangi nomor nota"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg></button><button class="inv-step-btn" onclick="invStep(1)" aria-label="Tambah nomor nota"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
           </div>
         </div>
-        <!--  v2.9.2: tombol Share WA atas DIHAPUS — share via KIRIM WA di bawah -->
+        <!--  v2.9.3: tombol Share WA atas DIHAPUS — share via KIRIM WA di bawah -->
         <div class="action-group">
           <button id="btnMainAction" class="btn-action save" onclick="handleMainAction()"><svg><use href="#icon-save"/></svg> Simpan</button>
           <button id="btnSecondaryAction" class="btn-action sort" onclick="handleSecondaryAction()"><svg><use href="#icon-sort"/></svg> Filter</button>
@@ -1452,7 +1457,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{
 </div></div>
 <script>
 /* =====================================================================
-   v2.9.2 — ALL-SVG ICONS  +  runtime emojiSVG converter (E)
+   v2.9.3 — ALL-SVG ICONS  +  runtime emojiSVG converter (E)
    • Tombol Share WA atas dihapus (faktur/retur/PI) — share via
      tombol KIRIM WA di bawah.
    • Tabel tampilan nota dikelompokkan per sub-kategori (kolom berbeda).
@@ -1789,7 +1794,7 @@ function resetTransactionUI(){currentCustomer=null;returSourceTx=null;isPiMode=f
 function resetTransaction(){showConfirm('Reset transaksi saat ini?',y=>{if(y)resetTransactionUI()})}
 
 /* =====================================================================
-    v2.9.2 — REKAP WA TEKS per sub-kategori (khusus mode ORDER).
+    v2.9.3 — REKAP WA TEKS per sub-kategori (khusus mode ORDER).
    Faktur / Retur / PI share lewat tombol KIRIM WA di bawah — gambar
    nota yang dikirim sudah berisi tabel per sub-kategori (lihat
    buildInvoiceDOM). Format kolom:
@@ -1944,7 +1949,7 @@ function confirmMultiPay(){var ha=JSON.parse(localStorage.getItem('txHistory'))|
 
 function computeDiscDetails(tx){var out=[];if(!tx||!tx.rows||!tx.cust||!tx.cust.disc)return out;tx.rows.forEach(function(r){var it=findItemByDesc(r.desc);var rc=it?it.cat:(r.cat||'');if(rc&&tx.cust.disc&&tx.cust.disc[rc]){var dp=tx.cust.disc[rc];if(dp>0){var da=(parseFloat(r.total)||0)*dp/100;var ex=null;for(var i=0;i<out.length;i++){if(out[i].cat===rc){ex=out[i];break}}if(ex)ex.amount+=da;else out.push({cat:rc,pct:dp,amount:da})}}});return out}
 function buildInvoiceDOM(tx){try{var ha=JSON.parse(localStorage.getItem('txHistory'))||[];var paid=parseFloat(tx.paidAmount)||0;var retCut=0;if(tx.invNo)ha.forEach(function(h){if((h.isRetur||h.isPi)&&h.originalInvNo===tx.invNo&&!h.isCancelled)retCut+=(h.finalGrandTotal||h.grandTotal||0)});var finalGT=(tx.finalGrandTotal!=null?tx.finalGrandTotal:(tx.grandTotal||0));if(!isFinite(finalGT))finalGT=0;var rem=Math.max(0,finalGT-paid-retCut);var subTotal=parseFloat(tx.subTotal)||0;var ongkir=getOngkir(tx);var discDetails=computeDiscDetails(tx);var tempo=(tx.cust&&tx.cust.tempo!=null)?tx.cust.tempo:0;var due=notaDueDate(tx);var tgl=new Date(tx.date).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});var dueStr=due?due.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}):'';var custName=escapeHtml(tx.cust?tx.cust.name:'-');var custCode=escapeHtml(tx.cust?tx.cust.code:'-');var custSales=tx.cust&&tx.cust.sales?escapeHtml(tx.cust.sales):'';var invNo=escapeHtml(tx.invNo||'-');var statusTxt=tx._draft?'DRAFT':(rem<=0?'LUNAS':'BELUM LUNAS');
-    /*  v2.9.2: tabel nota dikelompokkan per sub-kategori, kolom
+    /*  v2.9.3: tabel nota dikelompokkan per sub-kategori, kolom
        berbeda sesuai format yang diminta. Grup kosong dilewati. */
     var GROUP_DEFS=[
       {key:'otomotif',title:'OTOMOTIF',color:'#3b82f6',cols:['QTY','KODE','UKURAN','HARGA','TOTAL'],widths:['8%','20%','32%','20%','20%'],label:function(r,it){return (it&&it.size)||'-'}},
@@ -2169,7 +2174,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='2.9.2';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='2.9.3';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return 'terbaru';if(VB_STATUS==='update')return 'ada v'+VB_SERVER;if(VB_STATUS==='offline')return 'offline';return 'cek…'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
