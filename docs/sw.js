@@ -1,5 +1,5 @@
 /* =====================================================================
-   PT. BIOLI LESTARI — Service Worker  •  v2.9.7
+   PT. BIOLI LESTARI — Service Worker  •  v2.9.8
    Strategi:
    • HTML / navigasi : network-first (update selalu tembus),
                        fallback cache saat offline.
@@ -11,7 +11,7 @@
    PENTING: naikkan CACHE_NAME setiap rilis versi baru agar cache
    lama otomatis dibuang saat activate.
    ===================================================================== */
-const CACHE_NAME = 'bioli-cache-v2.9.7';
+const CACHE_NAME = 'bioli-cache-v2.9.8';
 const PRECACHE = ['./', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', function (e) {

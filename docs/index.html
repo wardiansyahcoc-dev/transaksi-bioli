@@ -176,7 +176,16 @@ body.show-bottomnav .pagination{bottom:calc(var(--nav-h) + env(safe-area-inset-b
 .btn-pro-fixed:active{transform:scale(.92);background:var(--accent-light)}
 .btn-pro-fixed.primary{background:linear-gradient(140deg,var(--accent),#2563eb);color:#fff;border-color:transparent;box-shadow:0 3px 10px rgba(59,130,246,.32)}
 .btn-pro-fixed.primary svg{stroke:#fff}
-.trans-header{display:flex;flex-direction:column;gap:7px;border-bottom:2px solid var(--border);padding-bottom:9px;margin-bottom:6px;flex-shrink:0}
+.trans-header{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  /* HAPUS GARIS MELINTANG */
+  /* border-bottom:2px solid var(--border); */
+  padding-bottom:9px;
+  margin-bottom:6px;
+  flex-shrink:0;
+}
 .header-top-row{display:flex;justify-content:space-between;align-items:center;width:100%;gap:10px}
 .company-info{flex:1;min-width:0}
 .company-title h2{margin:0;font-family:var(--font-display);font-size:18px;color:var(--primary);font-weight:700;line-height:1.15;letter-spacing:-.5px}
@@ -247,11 +256,227 @@ body.show-bottomnav .pagination{bottom:calc(var(--nav-h) + env(safe-area-inset-b
 label{display:block;font-size:8.5px;font-weight:700;margin-bottom:3px;color:var(--text-light);text-transform:uppercase}
 input,select,textarea{width:100%;padding:7px 9px;border:1.5px solid var(--border);border-radius:9px;font-size:11.5px;outline:none!important;color:var(--text);background:var(--surface);font-family:var(--font-main);transition:border .2s,background .2s,box-shadow .2s}
 input:focus,select:focus{border-color:var(--accent);background:var(--row-focus);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
-.row-input{display:flex;gap:7px;margin-bottom:5px;align-items:stretch;flex-shrink:0}
-.cust-code-col{flex:0 0 auto;width:78px;position:relative}
-.cust-code-col input{width:100%!important;padding:0 5px!important;font-size:11.5px!important;text-align:center;height:36px!important}
-.cust-name-col{flex:1;min-width:0;position:relative;display:flex;align-items:center}
-.cust-name-input{height:36px!important;border:1.5px solid var(--border)!important;border-radius:9px!important;background:var(--surface)!important;padding:0 11px!important;font-size:12.5px!important;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:.4px;cursor:pointer;width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* ===== CUSTOMER INPUT ROW - CLEAN STYLE ===== */
+.row-input{
+  display:flex;
+  gap:0;
+  margin-bottom:6px;
+  align-items:stretch;
+  flex-shrink:0;
+  background:linear-gradient(135deg, var(--surface), color-mix(in srgb, var(--surface) 92%, var(--accent)));
+  border:1.5px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+  border-radius:12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:all .25s var(--ease);
+  position:relative;
+  z-index:10;
+}
+.row-input:focus-within{
+  border-color:var(--accent);
+  box-shadow:0 4px 16px rgba(59,130,246,.12),0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent);
+  z-index:60;
+}
+[data-theme="dark"] .row-input{
+  background:linear-gradient(135deg, rgba(15,20,36,.7), rgba(20,28,52,.6));
+  border-color:rgba(148,163,184,.14);
+}
+[data-theme="dark"] .row-input:focus-within{
+  border-color:var(--accent);
+  box-shadow:0 4px 16px rgba(0,0,0,.4),0 0 0 3px rgba(129,140,248,.15);
+}
+
+/* ===== KODE DEALER - CENTERED BADGE ===== */
+.cust-code-col{
+  flex:0 0 auto;
+  width:88px;
+  position:relative;
+  border-right:none;
+  background:linear-gradient(135deg, color-mix(in srgb, var(--accent) 7%, var(--surface)), color-mix(in srgb, var(--accent) 3%, var(--surface)));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  border-radius:12px 0 0 12px;
+  padding:0;
+}
+[data-theme="dark"] .cust-code-col{
+  background:linear-gradient(135deg, rgba(99,102,241,.10), rgba(99,102,241,.04));
+}
+/* icon dinonaktifkan supaya teks benar-benar rata tengah & badge simetris */
+.cust-code-col::before,
+[data-theme="dark"] .cust-code-col::before{
+  display:none;
+}
+.cust-code-col input{
+  width:100%!important;
+  padding:0 6px!important;
+  font-size:11.5px!important;
+  text-align:center!important;          /* ← RATA TENGAH */
+  height:40px!important;
+  border:none!important;
+  background:transparent!important;
+  color:var(--accent)!important;
+  font-weight:800!important;
+  font-family:var(--font-mono)!important;
+  letter-spacing:.5px;
+  box-shadow:none!important;
+  text-transform:uppercase;             /* kode yang diketik tetap UPPERCASE */
+  position:relative;
+  z-index:2;
+}
+.cust-code-col input::placeholder{
+  color:var(--text-light);
+  opacity:.55;
+  font-weight:700;
+  font-size:10px!important;
+  letter-spacing:.4px;
+  text-transform:none;                  /* placeholder tampil "Kode" (bukan KODE) */
+}
+
+/* ===== NAMA DEALER ===== */
+.cust-name-col{
+  flex:1;
+  min-width:0;
+  position:relative;
+  display:flex;
+  align-items:center;
+  /* Jarak dari kode (pengganti garis) */
+  padding-left:6px;
+  border-left:1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+[data-theme="dark"] .cust-name-col{
+  border-left-color:rgba(148,163,184,.08);
+}
+.cust-name-input{
+  height:40px!important;
+  border:none!important;
+  border-radius:0 12px 12px 0!important;
+  background:transparent!important;
+  padding:0 32px 0 8px!important;
+  font-size:12.5px!important;
+  font-weight:800;
+  color:var(--primary)!important;
+  text-transform:uppercase;
+  letter-spacing:.2px;
+  cursor:pointer;
+  width:100%;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  transition:background .2s var(--ease);
+}
+.cust-name-input:hover{
+  background:color-mix(in srgb, var(--accent) 5%, transparent);
+}
+.cust-name-input::placeholder{
+  color:var(--text-light);
+  opacity:.6;
+  font-weight:600;
+  font-style:italic;
+  text-transform:none;
+  letter-spacing:0;
+}
+.cust-name-col::after{
+  content:'';
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:13px;
+  height:13px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-size:contain;
+  background-repeat:no-repeat;
+  pointer-events:none;
+  transition:transform .2s var(--ease);
+  z-index:1;
+}
+.row-input:focus-within .cust-name-col::after{
+  transform:translateY(-50%) rotate(180deg);
+}
+
+/* ===== AUTOCOMPLETE - FULL WIDTH, SEMUA KONTEN KELIATAN ===== */
+.autocomplete-list{
+  position:absolute!important;
+  top:100%!important;
+  left:0!important;
+  /* FULL WIDTH mengikuti lebar row input */
+  width:min(420px, calc(100vw - 28px))!important;
+  background:var(--surface)!important;
+  border:1.5px solid var(--accent)!important;
+  border-top:1px solid color-mix(in srgb, var(--accent) 20%, var(--border))!important;
+  border-radius:0 0 12px 12px!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.16)!important;
+  max-height:260px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  z-index:9999!important;
+  margin-top:-1px!important;
+  box-sizing:border-box;
+}
+[data-theme="dark"] .autocomplete-list{
+  background:#131a30!important;
+  border-color:rgba(129,140,248,.35)!important;
+  border-top-color:rgba(129,140,248,.15)!important;
+  box-shadow:0 14px 36px rgba(0,0,0,.5)!important;
+}
+.autocomplete-list.visible{
+  display:block;
+  animation:slideDown .18s ease-out;
+}
+.autocomplete-item{
+  padding:9px 14px!important;
+  cursor:pointer;
+  font-size:11px!important;
+  border-bottom:1px solid var(--border)!important;
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:10px!important;
+  color:var(--text);
+  transition:background .12s;
+}
+.autocomplete-item:last-child{
+  border-bottom:none!important;
+  border-radius:0 0 12px 12px;
+}
+.autocomplete-item:hover,
+.autocomplete-item.active{
+  background:var(--accent-light)!important;
+}
+.autocomplete-item .ac-main{
+  font-weight:700!important;
+  color:var(--primary)!important;
+  /* TIDAK truncate - biar full keliatan */
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  line-height:1.3;
+  flex:1;
+  min-width:0;
+  font-size:11.5px!important;
+}
+.autocomplete-item .ac-sub{
+  font-size:9px!important;
+  color:var(--text-light)!important;
+  font-family:var(--font-mono)!important;
+  white-space:nowrap!important;
+  flex-shrink:0;
+  letter-spacing:.2px;
+  text-align:right;
+  line-height:1.4;
+}
+
+/* Responsive */
+@media(max-width:480px){
+  .cust-code-col{width:78px}
+  .cust-code-col input{padding:0 4px!important;font-size:10.5px!important}
+  .cust-name-input{font-size:11.5px!important;padding:0 28px 0 6px!important}
+  .autocomplete-list{width:calc(100vw - 28px)!important}
+}
+@media(max-width:360px){
+  .cust-code-col{width:70px}
+  .cust-code-col input{font-size:10px!important;letter-spacing:.2px}
+}
 .autocomplete-list{position:absolute;top:100%;left:0;width:260px;max-width:calc(100vw - 24px);background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 9px 9px;box-shadow:0 4px 12px rgba(0,0,0,.1);max-height:200px;overflow-y:auto;overflow-x:hidden;z-index:50;display:none}
 .autocomplete-list.visible{display:block;animation:slideDown .18s ease-out}
 .autocomplete-item{padding:9px 11px;cursor:pointer;font-size:10.5px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;gap:8px;color:var(--text)}
@@ -406,10 +631,51 @@ body.pi-mode .price-input{pointer-events:auto!important;background:transparent!i
 .fa-totals .ft-disc .ft-label,.fa-totals .ft-disc .ft-value{color:var(--danger);font-size:9px;font-weight:600}
 .fa-totals .ft-disc-detail{font-size:7px;color:var(--danger);text-align:right;font-style:italic;width:100%;opacity:.8}
 
-/* Tanggal di bawah nota */
+/* Tanggal di bawah nota - Professional Style */
 .inv-date-display{
-  display:block;text-align:center;font-size:9px;color:var(--text-light);font-weight:600;
-  margin-top:3px;font-family:var(--font-mono);letter-spacing:.2px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  text-align:center;
+  font-size:10px;
+  font-weight:700;
+  color:var(--text);
+  margin-top:6px;
+  font-family:var(--font-mono);
+  letter-spacing:.3px;
+  background:linear-gradient(135deg, var(--bg), color-mix(in srgb, var(--surface) 95%, var(--accent)));
+  border:1.5px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+  border-radius:8px;
+  padding:5px 12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.04),inset 0 1px 0 rgba(255,255,255,.5);
+  transition:all .2s var(--ease);
+  min-width:140px;
+}
+.inv-date-display::before{
+  content:'';
+  width:13px;
+  height:13px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+  background-size:contain;
+  background-repeat:no-repeat;
+  flex-shrink:0;
+  opacity:.85;
+}
+[data-theme="dark"] .inv-date-display::before{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+}
+.inv-date-display:hover{
+  border-color:var(--accent);
+  box-shadow:0 4px 12px rgba(59,130,246,.15),inset 0 1px 0 rgba(255,255,255,.6);
+  transform:translateY(-1px);
+}
+@media(max-width:480px){
+  .inv-date-display{
+    font-size:9px;
+    padding:4px 10px;
+    min-width:120px;
+  }
 }
 
 /* Alamat PT */
@@ -1166,6 +1432,149 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
 #payModal .pay-grid .form-group:has(#payNote) input{
   letter-spacing:.2px;
 }
+/* ============================================================
+   v2.9.6+  •  TRANSAKSI TABLE: SCROLL HORIZONTAL + NO COLUMN HIDE
+   - hanya berlaku di #page-input (halaman transaksi)
+   - kolom No disembunyikan, lebar ulang biar harga & total muat
+   - wrapper scrollable dengan overflow-x
+   ============================================================ */
+
+/* 1) Wrapper tabel transaksi jadi scrollable */
+#page-input .table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 2) Hilangkan kolom "No" hanya di halaman transaksi */
+#page-input #transTable th:nth-child(1),
+#page-input #transTable td:nth-child(1) {
+  display: none !important;
+}
+
+/* 3) Redistribusi lebar kolom (total 100%): NAMA 45%, QTY 10%, HARGA 22%, TOTAL 23% */
+#page-input #transTable th:nth-child(2),
+#page-input #transTable td:nth-child(2) { width: 45%; min-width: 180px; }
+#page-input #transTable th:nth-child(3),
+#page-input #transTable td:nth-child(3) { width: 10%; text-align: center; }
+#page-input #transTable th:nth-child(4),
+#page-input #transTable td:nth-child(4) { width: 22%; text-align: right; }
+#page-input #transTable th:nth-child(5),
+#page-input #transTable td:nth-child(5) { width: 23%; text-align: right; }
+
+/* 4) Font angka tetap rapat & tabular (sama seperti patch sebelumnya) */
+#page-input .price-input,
+#page-input .total-input {
+  font-size: 9.5px !important;
+  padding: 0 4px !important;
+  letter-spacing: -.3px;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+#page-input .total-input { font-weight: 800; }
+
+/* 5) Responsif ekstrem (<360px): nama dikompresi, angka diprioritaskan */
+@media (max-width: 360px) {
+  #page-input #transTable th:nth-child(2),
+  #page-input #transTable td:nth-child(2) { width: 42%; min-width: 160px; }
+  #page-input #transTable th:nth-child(4),
+  #page-input #transTable td:nth-child(4) { width: 24%; }
+  #page-input #transTable th:nth-child(5),
+  #page-input #transTable td:nth-child(5) { width: 26%; }
+  #page-input .price-input,
+  #page-input .total-input { font-size: 9px !important; letter-spacing: -.4px; }
+}
+/* ============================================================
+   DARK-MODE POLISH — tanggal + baris customer biar "hidup"
+   (override saja, light mode tidak tersentuh)
+   ============================================================ */
+
+/* --- 1) TANGGAL: dari lubang hitam jadi chip indigo ambient --- */
+[data-theme="dark"] .inv-date-display{
+  background:linear-gradient(135deg, rgba(99,102,241,.12), rgba(15,20,36,.55));
+  border-color:rgba(129,140,248,.30);
+  color:#e2e8f0;
+  box-shadow:0 2px 12px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.05);
+}
+[data-theme="dark"] .inv-date-display::before{
+  opacity:1;
+  filter:drop-shadow(0 0 5px rgba(129,140,248,.45));
+}
+[data-theme="dark"] .inv-date-display:hover{
+  border-color:rgba(129,140,248,.55);
+  background:linear-gradient(135deg, rgba(99,102,241,.18), rgba(20,28,52,.6));
+  box-shadow:0 4px 18px rgba(99,102,241,.22), inset 0 1px 0 rgba(255,255,255,.07);
+}
+[data-theme="dark"] .inv-date-display:hover::before{
+  transform:scale(1.12) rotate(-6deg);
+}
+
+/* --- 2) BARIS CUSTOMER: layering + sekat halus yang "nyala" --- */
+[data-theme="dark"] .row-input{
+  background:linear-gradient(135deg, rgba(20,28,52,.72), rgba(13,18,33,.6));
+  border-color:rgba(148,163,184,.14);
+  box-shadow:0 2px 12px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.04);
+}
+[data-theme="dark"] .row-input:focus-within{
+  border-color:rgba(129,140,248,.55);
+  box-shadow:0 4px 20px rgba(99,102,241,.20), 0 0 0 3px rgba(129,140,248,.14), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+/* badge kode: lebih defined, glow saat fokus */
+[data-theme="dark"] .cust-code-col{
+  background:linear-gradient(135deg, rgba(129,140,248,.16), rgba(99,102,241,.05));
+  box-shadow:inset -1px 0 0 rgba(129,140,248,.16), inset 0 1px 0 rgba(255,255,255,.04);
+  transition:box-shadow .25s var(--ease), background .25s var(--ease);
+}
+[data-theme="dark"] .row-input:focus-within .cust-code-col{
+  background:linear-gradient(135deg, rgba(129,140,248,.24), rgba(99,102,241,.08));
+  box-shadow:inset -1px 0 0 rgba(129,140,248,.30), inset 0 1px 0 rgba(255,255,255,.06);
+}
+[data-theme="dark"] .cust-code-col input{
+  color:#a5b4fc;
+  text-shadow:0 0 12px rgba(129,140,248,.35);
+}
+
+/* sekat kode|nama: gradient fade keunguan (bukan garis abu yang hilang) */
+[data-theme="dark"] .cust-name-col{
+  border-left:none;
+  box-shadow:inset 1px 0 0 rgba(129,140,248,.10);
+}
+/* nama: depth biar nggak flat nempel */
+[data-theme="dark"] .cust-name-input{
+  color:#f1f5f9;
+  text-shadow:0 1px 3px rgba(0,0,0,.5);
+}
+[data-theme="dark"] .cust-name-input:hover{
+  background:rgba(129,140,248,.07);
+}
+/* chevron: indigo biar kelihatan */
+[data-theme="dark"] .cust-name-col::after{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23818cf8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  opacity:.75;
+}
+[data-theme="dark"] .row-input:focus-within .cust-name-col::after{
+  opacity:1;
+  filter:drop-shadow(0 0 4px rgba(129,140,248,.5));
+}
+
+/* dropdown rekomendasi di dark mode: selaras & bertenaga */
+[data-theme="dark"] .autocomplete-list{
+  background:linear-gradient(180deg, #151d38, #0f1424);
+  border-color:rgba(129,140,248,.35);
+  border-top-color:rgba(129,140,248,.18);
+  box-shadow:0 16px 40px rgba(0,0,0,.55);
+}
+[data-theme="dark"] .autocomplete-item{
+  border-bottom-color:rgba(148,163,184,.08);
+}
+[data-theme="dark"] .autocomplete-item .ac-main{
+  color:#e2e8f0;
+}
+[data-theme="dark"] .autocomplete-item:hover,
+[data-theme="dark"] .autocomplete-item.active{
+  background:rgba(99,102,241,.14);
+}
+
 </style>
 </head>
 <body>
@@ -1186,7 +1595,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v2.9.7</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v2.9.8</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -1204,7 +1613,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
           <div class="company-info">
             <div class="company-title"><h2>PT. BIOLI LESTARI</h2></div>
             <div class="company-address">
-              <div class="company-address-line">Jl. Taman Kopo Katapang (TKK), Blok P1/07</div>
+              <div class="company-address-line">Jl. Taman Kopo Katapang Blok P1/07</div>
               <div class="ca-line">
                 <span class="ca-loc"><svg class="ca-ico"><use href="#icon-map-pin"/></svg>BANDUNG</span>
                   <svg class="ca-dot-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="currentColor"/></svg>
@@ -1229,7 +1638,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
       </div>
       <div class="input-section">
         <div class="row-input">
-          <div class="col cust-code-col"><input type="text" id="codeInputDefault" maxlength="40" oninput="this.value=this.value.toUpperCase();onCodeInputChange();" onfocus="onCodeInputFocus()" onkeydown="handleCodeKeydown(event)" autocomplete="off" placeholder="Kode / Nama"><div id="custAcListDefault" class="autocomplete-list"></div></div>
+          <div class="col cust-code-col"><input type="text" id="codeInputDefault" maxlength="40" oninput="this.value=this.value.toUpperCase();onCodeInputChange();" onfocus="onCodeInputFocus()" onkeydown="handleCodeKeydown(event)" autocomplete="off" placeholder="Kode"><div id="custAcListDefault" class="autocomplete-list"></div></div>
           <div class="col cust-name-col"><input type="text" id="nameDisplay" class="cell-input cust-name-input" readonly tabindex="-1" onclick="toggleCustInfo()" placeholder="Nama Customer"></div>
         </div>
         <div id="custInfoBox" onclick="toggleCustInfo()"><div><svg class="ei"><use href="#icon-clock"/></svg> Tempo: <span id="infoTempo" style="font-weight:700">-</span> &#x2022; <svg class="ei"><use href="#icon-users"/></svg> Sales: <span id="infoSales" style="font-weight:700">-</span></div><div id="infoDisc" style="color:var(--danger);font-weight:700;font-size:9px;margin-top:2px"><svg class="ei"><use href="#icon-tag"/></svg> Diskon: -</div></div>
@@ -1555,6 +1964,13 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
 </svg>
 
 <script>
+	// [PATCH] Sembunyikan kolom "No" di header tabel transaksi saat load
+document.addEventListener('DOMContentLoaded', function(){
+  if(document.getElementById('page-input').classList.contains('active')){
+    const thNo = document.querySelector('#transTable thead th:nth-child(1)');
+    if(thNo) thNo.style.display = 'none';
+  }
+});
 const APP_DEFAULT_PASS='woyowoyo';const SESSION_DURATIONS={session:0,'1day':864e5,'1week':6048e5};
 (function(){const p=localStorage.getItem('appPass');if(!p||p==='admin123')localStorage.setItem('appPass',APP_DEFAULT_PASS)})();
 var isUnlocked=false,loginDuration='session',loginExpireAt=0,popupQueue=[],popupActive=false,popupCallback=null,currentImportType='',pendingImportRegion='JKT',returSourceTx=null,FIXED_ROWS=10,currentMode='nota',isPiMode=false,currentPayGrand=0,payCashUserEdited=false,payRecSubVal=0,payRecDiscVal=0,payRecOngkirVal=0,histPayIdx=-1,histPayRem=0,histPayCashEdited=false;
@@ -1745,9 +2161,9 @@ function getCodeInput(){return document.getElementById('codeInputDefault')}
 function getCustAcList(){return document.getElementById('custAcListDefault')}
 function updateCodeInput(v){getCodeInput().value=v}
 
-function switchMode(mode){if(mode===currentMode&&!isPiMode){closeAllMenus();return}if(!isUnlocked&&(mode==='retur'||mode==='order')){alertWarning('Mode '+mode+' hanya untuk pengguna login!');return}saveCurrentModeState();isPiMode=false;currentMode=mode;const mb=document.getElementById('btnMainAction'),sb=document.getElementById('btnSecondaryAction'),hs=document.querySelectorAll('#transTable thead th'),tl=document.getElementById('totalLabel');document.body.classList.remove('order-mode','pi-mode');document.getElementById('piPriceHint').style.display='none';if(mode==='nota'){mb.className='btn-action save';mb.innerHTML='<svg><use href="#icon-save"/></svg> Simpan';sb.className='btn-action sort';sb.style.cssText='';sb.innerHTML='<svg><use href="#icon-sort"/></svg> Filter';tl.textContent='Grand Total';if(hs[3])hs[3].textContent='Harga';if(hs[4]){hs[4].textContent='Total';hs[4].classList.remove('hidden-cell')}getCodeInput().placeholder='Kode / Nama'}else if(mode==='retur'){mb.className='btn-action save';mb.innerHTML='<svg><use href="#icon-save"/></svg> Simpan';sb.className='btn-action sort';sb.style.cssText='background:#fff7ed;color:var(--pi);border-color:var(--pi)';sb.innerHTML='<svg><use href="#icon-scissors"/></svg> PI';sb.title='Aktifkan mode PI (harga bisa diedit)';tl.textContent='Grand Total';if(hs[3])hs[3].textContent='Harga';if(hs[4]){hs[4].textContent='Total';hs[4].classList.remove('hidden-cell')}getCodeInput().placeholder='No. Nota'}else{document.body.classList.add('order-mode');mb.className='btn-action save';mb.innerHTML='<svg><use href="#icon-save"/></svg> Simpan';sb.className='btn-action copy';sb.style.cssText='background:#25D366;color:#fff;border-color:#25D366';sb.innerHTML='<svg style="stroke:#fff"><use href="#icon-share"/></svg> Share WA';tl.textContent='Total Order';if(hs[3])hs[3].textContent='Deskripsi';if(hs[4])hs[4].classList.add('hidden-cell');getCodeInput().placeholder='Kode / Nama'}var _or=document.getElementById('ongkirCol');if(_or)_or.style.display=(mode==='nota')?'flex':'none';updatePiModeUI();setInvNumPreview();updateInvDateDisplay();loadModeState(mode);renderTransMenu()}
+function switchMode(mode){if(mode===currentMode&&!isPiMode){closeAllMenus();return}if(!isUnlocked&&(mode==='retur'||mode==='order')){alertWarning('Mode '+mode+' hanya untuk pengguna login!');return}saveCurrentModeState();isPiMode=false;currentMode=mode;const mb=document.getElementById('btnMainAction'),sb=document.getElementById('btnSecondaryAction'),hs=document.querySelectorAll('#transTable thead th'),tl=document.getElementById('totalLabel');document.body.classList.remove('order-mode','pi-mode');document.getElementById('piPriceHint').style.display='none';if(mode==='nota'){mb.className='btn-action save';mb.innerHTML='<svg><use href="#icon-save"/></svg> Simpan';sb.className='btn-action sort';sb.style.cssText='';sb.innerHTML='<svg><use href="#icon-sort"/></svg> Filter';tl.textContent='Grand Total';if(hs[3])hs[3].textContent='Harga';if(hs[4]){hs[4].textContent='Total';hs[4].classList.remove('hidden-cell')}getCodeInput().placeholder='Kode'}else if(mode==='retur'){mb.className='btn-action save';mb.innerHTML='<svg><use href="#icon-save"/></svg> Simpan';sb.className='btn-action sort';sb.style.cssText='background:#fff7ed;color:var(--pi);border-color:var(--pi)';sb.innerHTML='<svg><use href="#icon-scissors"/></svg> PI';sb.title='Aktifkan mode PI (harga bisa diedit)';tl.textContent='Grand Total';if(hs[3])hs[3].textContent='Harga';if(hs[4]){hs[4].textContent='Total';hs[4].classList.remove('hidden-cell')}getCodeInput().placeholder='No. Nota'}else{document.body.classList.add('order-mode');mb.className='btn-action save';mb.innerHTML='<svg><use href="#icon-save"/></svg> Simpan';sb.className='btn-action copy';sb.style.cssText='background:#25D366;color:#fff;border-color:#25D366';sb.innerHTML='<svg style="stroke:#fff"><use href="#icon-share"/></svg> Share WA';tl.textContent='Total Order';if(hs[3])hs[3].textContent='Deskripsi';if(hs[4])hs[4].classList.add('hidden-cell');getCodeInput().placeholder='Kode'}var _or=document.getElementById('ongkirCol');if(_or)_or.style.display=(mode==='nota')?'flex':'none';updatePiModeUI();setInvNumPreview();updateInvDateDisplay();loadModeState(mode);renderTransMenu()}
 
-function togglePiMode(){if(!isUnlocked){alertWarning('PI hanya untuk pengguna login!');return}if(currentMode!=='retur')return alertWarning('PI hanya di mode Retur');saveCurrentModeState();isPiMode=!isPiMode;if(isPiMode){modeStates.pi={rows:[],customer:currentCustomer,invEdited:false,ongkir:0};returSourceTx=null;getCodeInput().placeholder='Kode Dealer';document.body.classList.add('pi-mode');alertSuccess('PI Aktif \u2022 harga bisa diubah manual')}else{getCodeInput().placeholder='No. Nota';document.body.classList.remove('pi-mode')}updatePiModeUI();setInvNumPreview();updateInvDateDisplay();loadModeState(isPiMode?'pi':'retur')}
+function togglePiMode(){if(!isUnlocked){alertWarning('PI hanya untuk pengguna login!');return}if(currentMode!=='retur')return alertWarning('PI hanya di mode Retur');saveCurrentModeState();isPiMode=!isPiMode;if(isPiMode){modeStates.pi={rows:[],customer:currentCustomer,invEdited:false,ongkir:0};returSourceTx=null;getCodeInput().placeholder='Kode';document.body.classList.add('pi-mode');alertSuccess('PI Aktif \u2022 harga bisa diubah manual')}else{getCodeInput().placeholder='No. Nota';document.body.classList.remove('pi-mode')}updatePiModeUI();setInvNumPreview();updateInvDateDisplay();loadModeState(isPiMode?'pi':'retur')}
 function updatePiModeUI(){const sb=document.getElementById('btnSecondaryAction'),bp=document.getElementById('btnPiCut');if(!sb)return;if(currentMode==='retur'){if(isPiMode){sb.style.cssText='background:var(--pi);color:#fff;border-color:var(--pi)';sb.innerHTML='<svg><use href="#icon-scissors"/></svg> PI \u2705';sb.classList.add('pi-active');sb.title='Mode PI AKTIF \u2022 harga editable. Klik untuk nonaktifkan.';if(bp)bp.style.display='inline-flex'}else{sb.style.cssText='background:#fff7ed;color:var(--pi);border-color:var(--pi)';sb.innerHTML='<svg><use href="#icon-scissors"/></svg> PI';sb.classList.remove('pi-active');sb.title='Aktifkan mode PI (harga bisa diedit)';if(bp)bp.style.display='none'}}else{sb.style.cssText='';if(currentMode==='order'){sb.className='btn-action copy';sb.style.cssText='background:#25D366;color:#fff;border-color:#25D366';sb.innerHTML='<svg style="stroke:#fff"><use href="#icon-share"/></svg> Share WA'}else{sb.className='btn-action sort';sb.innerHTML='<svg><use href="#icon-sort"/></svg> Filter'}isPiMode=false;if(bp)bp.style.display='none'}}
 function toggleCustInfo(){if(currentCustomer)document.getElementById('custInfoBox').classList.toggle('visible')}
 function onCodeInputChange(){const el=getCodeInput();if(currentMode==='retur'&&!isPiMode)searchInvoiceForRetur(el.value.trim());else{el.value=el.value.replace(/[^A-Za-z0-9 ]/g,'').toUpperCase();searchCustomer()}}
@@ -1951,12 +2367,13 @@ function buildOrderShareText(cust, rows, grandTotal){
   var lines=[];
   var nm = cust ? cleanCustName(cust.name, cust.code) : '-';
   var cd = (cust && cust.code) ? String(cust.code).trim() : '';
-  lines.push(cd ? (nm + ' (' + cd + ')') : (nm || '-'));
+  var head = cd ? (nm + ' (' + cd + ')') : (nm || '-');
+  lines.push('*' + head.toUpperCase() + '*');                 // NAMA (KODE) → tebal + kapital
   (rows||[]).forEach(function(r){
     var code = (r && r.code) ? r.code : ((findItemByDesc(r && r.desc)||{}).code || (r && r.desc) || '-');
-    lines.push(code + ' = ' + (r && r.qty != null ? r.qty : 0));
+    lines.push(String(code).toUpperCase() + ' = ' + (r && r.qty != null ? r.qty : 0));  // KODE = QTY → plain + kapital
   });
-  lines.push('total = ' + fmtCurrencyFull(grandTotal||0));
+  lines.push('*TOTAL = ' + fmtCurrencyFull(grandTotal||0) + '*');   // TOTAL → tebal + kapital
   return lines.join('\n');
 }
 function shareHistoryTx(gi){
@@ -2142,10 +2559,10 @@ function cvSortBy(colIdx){var key=cvKeyMap()[CV.tab][colIdx];if(!key)return;if(C
 function cvNoteHtml(r){if(r._error)return'<span class="cv-tag cv-bad">error</span> '+cvEsc(r._error);if(r._warn)return'<span class="cv-tag cv-warn">cek</span> '+cvEsc(r._warn);return'<span class="cv-tag cv-ok">ok</span>'}
 function cvRenderPreview(){var q=(cvGet('cvSearch').value||'').trim().toLowerCase();var onlyBad=cvGet('cvOnlyBad').checked;CV.filtered=CV.rows.filter(function(r){if(onlyBad&&!r._bad)return false;if(q){var str='';for(var k in r){if(k.indexOf('_')===0)continue;if(r[k]&&typeof r[k]==='object'){try{str+=JSON.stringify(r[k])+' '}catch(e){}}else{str+=r[k]+' '}}if(str.toLowerCase().indexOf(q)<0)return false}return true});var psEl=cvGet('cvPageSel');var pageSize=psEl.value==='all'?(CV.filtered.length||1):parseInt(psEl.value,10);CV.pageSize=pageSize;var totalPages=Math.max(1,Math.ceil(CV.filtered.length/pageSize));if(CV.page>totalPages)CV.page=totalPages;if(CV.page<1)CV.page=1;var startIdx=(CV.page-1)*pageSize;var pageRows=CV.filtered.slice(startIdx,startIdx+pageSize);var body=cvGet('cvBody');if(!pageRows.length){body.innerHTML='<tr><td colspan="'+cvHeads()[CV.tab].length+'"><div class="cv-empty">Tidak ada data.</div></td></tr>';cvGet('cvPag').innerHTML='';return}var html='';pageRows.forEach(function(r){var note=cvNoteHtml(r);var rowClass=r._bad?'cv-bad':'';if(CV.tab==='products'){html+='<tr class="'+rowClass+'"><td class="cv-num">'+r._line+'</td><td class="cv-code">'+cvEsc(r.code)+'</td><td class="cv-name">'+cvEsc(r.name)+'</td><td>'+cvEsc(r.cat)+'</td><td class="cv-num">'+(r.price||0).toLocaleString('id-ID')+'</td><td class="cv-num">'+(r.stock||0)+'</td><td class="cv-warn">'+note+'</td></tr>'}else if(CV.tab==='customers'){html+='<tr class="'+rowClass+'"><td class="cv-num">'+r._line+'</td><td class="cv-code">'+cvEsc(r.code)+'</td><td class="cv-name">'+cvEsc(r.name)+'</td><td class="cv-num">'+(r.tempo||0)+'</td><td class="cv-sales'+(r.sales?'':' none')+'">'+cvEsc(r.sales||'-')+'</td><td class="cv-num">'+Object.keys(r.disc||{}).length+'</td><td class="cv-warn">'+note+'</td></tr>'}else if(CV.tab==='invoices'){var dt='-';try{dt=new Date(r.date).toLocaleDateString('id-ID')}catch(e){}var cname=(r.cust&&r.cust.name)?cvEsc(r.cust.name):'-';html+='<tr class="'+rowClass+'"><td class="cv-num">'+r._line+'</td><td class="cv-code">'+cvEsc(r.invNo)+'</td><td>'+cvEsc(dt)+'</td><td class="cv-name">'+cname+'</td><td class="cv-num">'+(r.rows||[]).length+'</td><td class="cv-num">'+(r.grandTotal||0).toLocaleString('id-ID')+'</td><td class="cv-warn">'+note+'</td></tr>'}else{html+='<tr class="'+rowClass+'"><td class="cv-num">'+r._line+'</td><td class="cv-code">'+cvEsc(r.code||'')+'</td><td class="cv-name">'+cvEsc(r.name||'')+'</td><td class="cv-num">'+(r.qty||0)+'</td><td class="cv-warn">'+note+'</td></tr>'}});body.innerHTML=html;if(totalPages>1){cvGet('cvPag').innerHTML='<button onclick="cvChangePage('+(CV.page-1)+')" '+(CV.page===1?'disabled':'')+'>\u25C0 Prev</button><span class="cv-pi">Halaman '+CV.page+' / '+totalPages+'</span><button onclick="cvChangePage('+(CV.page+1)+')" '+(CV.page===totalPages?'disabled':'')+'>Next \u25B6</button>'}else{cvGet('cvPag').innerHTML=''}}
 function cvChangePage(p){if(typeof p==='number')CV.page=p;else CV.page=1;cvRenderPreview()}
-function cvUpdateUI(){var cfg={products:{title:'Sumber Data \u2022 Products',hint:'Kolom: <b>Kode</b>, <b>Nama</b>, <b>Kategori</b>, <b>Sub Kategori</b>, <b>Ukuran</b>, <b>Deskripsi</b>, <b>Harga</b>, <b>Stok</b>.',ph:'Kode Produk\tNama\tKategori\tSub Kategori\tUkuran\tDeskripsi\tHarga\tStok\nPST-001\tPiston Standard\tPISTON\tSTD\tSTD\tPiston aluminium\t50000\t25'},customers:{title:'Sumber Data \u2022 Customers',hint:'Kolom: <b>Kode</b>, <b>Nama</b>, <b>Tempo</b>, <b>Sales</b>, lalu kolom kategori diskon.',ph:'KODE DEALER\tName\tTEMPO\tZNC\tZBK\tPISTON\tSalesman\nP042\tPBL TEHNIK\t45\t15%\t20%\t20%\tBandung 1'},invoices:{title:'Sumber Data \u2022 Invoices',hint:'Satu baris per item. Baris <b>No Invoice</b> sama otomatis digabung.',ph:'No Invoice\tTanggal\tKode Customer\tNama Customer\tTempo\tSalesman\tDeskripsi\tQty\tHarga\tKategori\tOngkir\tDibayar\nSI-26/F09431\t2026-06-24\tP042\tPBL TEHNIK\t45\tBandung 1\tBARANG IMPOR\t1\t1041352\tUMUM\t35000\t0'},stock:{title:'Sumber Data \u2022 Stock Update',hint:'Kolom: <b>Kode</b> atau <b>Nama</b>, lalu <b>Qty</b>.',ph:'Kode\tQty\nPST-001\t30\nAMP-080\t100'}};var c=cfg[CV.tab];cvGet('cvInputTitle').textContent=c.title;cvGet('cvHint').innerHTML=c.hint;cvGet('cvTsv').placeholder=c.ph;var rr=cvGet('cvRegionRow');if(rr)rr.className='cv-regionrow'+(CV.tab==='invoices'?' show':'')}
+function cvUpdateUI(){var cfg={products:{title:'Sumber Data \u2022 Products',hint:'Kolom: <b>Kode</b>, <b>Nama</b>, <b>Kategori</b>, <b>Sub Kategori</b>, <b>Ukuran</b>, <b>Deskripsi</b>, <b>Harga</b>, <b>Stok</b>.',ph:'Kode Produk\tNama\tKategori\tSub Kategori\tUkuran\tDeskripsi\tHarga\tStok\nPST-001\tPiston Standard\tPISTON\tSTD\tSTD\tPiston aluminium\t50000\t25'},customers:{title:'Sumber Data \u2022 Customers',hint:'Kolom: <b>Kode</b>, <b>Nama</b>, <b>Tempo</b>, <b>Sales</b>, lalu kolom kategori diskon.',ph:'KODE\tName\tTEMPO\tZNC\tZBK\tPISTON\tSalesman\nP042\tPBL TEHNIK\t45\t15%\t20%\t20%\tBandung 1'},invoices:{title:'Sumber Data \u2022 Invoices',hint:'Satu baris per item. Baris <b>No Invoice</b> sama otomatis digabung.',ph:'No Invoice\tTanggal\tKode Customer\tNama Customer\tTempo\tSalesman\tDeskripsi\tQty\tHarga\tKategori\tOngkir\tDibayar\nSI-26/F09431\t2026-06-24\tP042\tPBL TEHNIK\t45\tBandung 1\tBARANG IMPOR\t1\t1041352\tUMUM\t35000\t0'},stock:{title:'Sumber Data \u2022 Stock Update',hint:'Kolom: <b>Kode</b> atau <b>Nama</b>, lalu <b>Qty</b>.',ph:'Kode\tQty\nPST-001\t30\nAMP-080\t100'}};var c=cfg[CV.tab];cvGet('cvInputTitle').textContent=c.title;cvGet('cvHint').innerHTML=c.hint;cvGet('cvTsv').placeholder=c.ph;var rr=cvGet('cvRegionRow');if(rr)rr.className='cv-regionrow'+(CV.tab==='invoices'?' show':'')}
 function cvSwitch(tab){CV.tab=tab;document.querySelectorAll('.cv-tab').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-tab')===tab)});cvUpdateUI();cvClear()}
 function cvRun(){var btn=cvGet('cvConvertBtn');if(btn){btn.innerHTML='<span class="cv-loading"></span> Memproses...';btn.disabled=true}setTimeout(function(){try{var text=cvGet('cvTsv').value;var res;if(CV.tab==='products')res=cvConvProducts(text);else if(CV.tab==='customers')res=cvConvCustomers(text);else if(CV.tab==='invoices')res=cvConvInvoices(text);else res=cvConvStock(text);cvRender(res)}catch(err){cvRender({rows:[],errors:[{line:0,code:'-',name:'-',reason:err.message||'Error tidak diketahui'}],total:0})}if(btn){btn.innerHTML='<svg width="14" height="14" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><use href="#icon-wrench"/></svg> Konversi';btn.disabled=false}},60)}
-function cvSample(){var s={products:'Kode Produk\tNama\tKategori\tSub Kategori\tUkuran\tDeskripsi\tHarga\tStok\nPST-001\tPiston Standard\tPISTON\tSTD\tSTD\tPiston aluminium\t50.000\t25\nAMP-080\tAmplas Kasar\tAMPLAS\tWOOD\t9x11\tGrit 80\t5000\t120',customers:'KODE DEALER\tName\tTEMPO\tZNC\tZBK\tPISTON\tSalesman\nP042\tPBL TEHNIK\t45\t15%\t20%\t20%\tBandung 1\nA089\tADI TEHNIK\t60\t20%\t0%\t5%\tBandung 1',invoices:'No Invoice\tTanggal\tKode Customer\tNama Customer\tTempo\tSalesman\tDeskripsi\tQty\tHarga\tKategori\tOngkir\tDibayar\nSI-26/F09431\t2026-06-24\tP042\tPBL TEHNIK\t45\tBandung 1\tBARANG IMPOR\t1\t1041352\tUMUM\t35000\t0',stock:'Kode\tQty\nPST-001\t30\nAMP-080\t100'};cvGet('cvTsv').value=s[CV.tab]||'';cvRun()}
+function cvSample(){var s={products:'Kode Produk\tNama\tKategori\tSub Kategori\tUkuran\tDeskripsi\tHarga\tStok\nPST-001\tPiston Standard\tPISTON\tSTD\tSTD\tPiston aluminium\t50.000\t25\nAMP-080\tAmplas Kasar\tAMPLAS\tWOOD\t9x11\tGrit 80\t5000\t120',customers:'KODE\tName\tTEMPO\tZNC\tZBK\tPISTON\tSalesman\nP042\tPBL TEHNIK\t45\t15%\t20%\t20%\tBandung 1\nA089\tADI TEHNIK\t60\t20%\t0%\t5%\tBandung 1',invoices:'No Invoice\tTanggal\tKode Customer\tNama Customer\tTempo\tSalesman\tDeskripsi\tQty\tHarga\tKategori\tOngkir\tDibayar\nSI-26/F09431\t2026-06-24\tP042\tPBL TEHNIK\t45\tBandung 1\tBARANG IMPOR\t1\t1041352\tUMUM\t35000\t0',stock:'Kode\tQty\nPST-001\t30\nAMP-080\t100'};cvGet('cvTsv').value=s[CV.tab]||'';cvRun()}
 function cvClear(){cvGet('cvTsv').value='';cvGet('cvSearch').value='';cvGet('cvOnlyBad').checked=false;cvRender({rows:[],errors:[],total:0})}
 function cvPaste(){if(!navigator.clipboard||!navigator.clipboard.readText){alertWarning('Clipboard tidak tersedia.');return}navigator.clipboard.readText().then(function(t){if(!t){alertWarning('Clipboard kosong.');return}cvGet('cvTsv').value=t;cvRun()}).catch(function(){alertWarning('Gagal membaca clipboard.')})}
 function cvHandleFile(file){if(file.size>10*1024*1024){alertWarning('File terlalu besar! Max 10MB.');return}var ext=(file.name.split('.').pop()||'').toLowerCase();if(ext==='xls'||ext==='xlsx'){if(typeof XLSX==='undefined'){alertWarning('Library Excel belum termuat.');return}var r=new FileReader();r.onload=function(e){try{var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});cvGet('cvTsv').value=XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]],{FS:'\t',RS:'\n'});cvRun()}catch(err){cvRender({rows:[],errors:[],total:0});alertDanger('Gagal baca Excel: '+escapeHtml(err.message))}};r.onerror=function(){cvRender({rows:[],errors:[],total:0});alertDanger('Gagal membaca file.')};r.readAsArrayBuffer(file);return}var r2=new FileReader();r2.onload=function(e){cvGet('cvTsv').value=e.target.result;cvRun()};r2.onerror=function(){cvRender({rows:[],errors:[],total:0});alertDanger('Gagal membaca file.')};r2.readAsText(file)}
@@ -2223,7 +2640,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='2.9.7';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='2.9.8';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return'terbaru';if(VB_STATUS==='update')return'ada v'+VB_SERVER;if(VB_STATUS==='offline')return'offline';return'cek\u2026'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
