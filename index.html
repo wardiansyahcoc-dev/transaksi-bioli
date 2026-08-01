@@ -1433,7 +1433,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
   letter-spacing:.2px;
 }
 /* ============================================================
-   v2.9.6+  •  TRANSAKSI TABLE: SCROLL HORIZONTAL + NO COLUMN HIDE
+   v2.9.9+  •  TRANSAKSI TABLE: SCROLL HORIZONTAL + NO COLUMN HIDE
    - hanya berlaku di #page-input (halaman transaksi)
    - kolom No disembunyikan, lebar ulang biar harga & total muat
    - wrapper scrollable dengan overflow-x
@@ -1595,7 +1595,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v2.9.8</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v2.9.9</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -2320,16 +2320,56 @@ async function __bioliShareInvoice(node, invNo, ev, extraCaption){
 }
 
 async function sendDraftInvoiceToWA(ev){
+  // Mode ORDER → langsung share teks, tanpa popup
+  if(currentMode === 'order'){
+    shareOrderToWA();
+    return;
+  }
+  // Mode NOTA / RETUR / PI → tampilkan popup pilihan
+  if(!currentCustomer){ alertWarning('Pilih customer dulu!'); return; }
+  var rows = collectValidRows();
+  if(!rows.length){ alertWarning('Isi barang dulu!'); return; }
+
+  enqueuePopup({
+    type: 'question',
+    title: 'Kirim Faktur',
+    message: 'Pilih aksi untuk <b>' + escapeHtml(currentCustomer.name) + '</b>:',
+    buttons: [
+      { text: '👁 Preview Faktur', cls: 'secondary', action: 'preview' },
+      { text: '📤 Share ke WhatsApp', cls: 'primary', action: 'share' }
+    ],
+    callback: function(a){
+      if(a === 'preview'){
+        try{
+          var draft = buildCurrentDraft();
+          previewInvoice(draft);
+        }catch(e){
+          alertDanger('Gagal membuat preview: ' + escapeHtml(e && e.message ? e.message : String(e)));
+        }
+      } else if(a === 'share'){
+        doSendDraftToWA(ev);
+      }
+    }
+  });
+}
+async function doSendDraftToWA(ev){
   try{
-    if(!currentCustomer){alertWarning('Pilih customer dulu!');return}
-    var rows=collectValidRows();if(!rows.length){alertWarning('Isi barang dulu!');return}
-    var draft=buildCurrentDraft();var node=buildInvoiceDOM(draft);var stage=getOffscreenStage();stage.innerHTML='';stage.appendChild(node);
-    await new Promise(function(res){setTimeout(res,100)});
-    var extraCaption='Customer: '+(currentCustomer?currentCustomer.name:'-');
-    if(draft.finalGrandTotal) extraCaption+='\nTotal: '+fmtCurrencyFull(draft.finalGrandTotal);
-    await __bioliShareInvoice(node,draft.invNo,ev,extraCaption);
-    setTimeout(function(){try{stage.innerHTML=''}catch(e){}},3000);
-  }catch(e){alertDanger('Gagal mengirim: '+escapeHtml(e&&e.message?e.message:String(e)))}
+    if(!currentCustomer){ alertWarning('Pilih customer dulu!'); return; }
+    var rows = collectValidRows();
+    if(!rows.length){ alertWarning('Isi barang dulu!'); return; }
+    var draft = buildCurrentDraft();
+    var node = buildInvoiceDOM(draft);
+    var stage = getOffscreenStage();
+    stage.innerHTML = '';
+    stage.appendChild(node);
+    await new Promise(function(res){ setTimeout(res, 100); });
+    var extraCaption = 'Customer: ' + (currentCustomer ? currentCustomer.name : '-');
+    if(draft.finalGrandTotal) extraCaption += '\nTotal: ' + fmtCurrencyFull(draft.finalGrandTotal);
+    await __bioliShareInvoice(node, draft.invNo, ev, extraCaption);
+    setTimeout(function(){ try{ stage.innerHTML = ''; }catch(e){} }, 3000);
+  }catch(e){
+    alertDanger('Gagal mengirim: ' + escapeHtml(e && e.message ? e.message : String(e)));
+  }
 }
 
 async function shareImageToWhatsApp(ev){
@@ -2484,40 +2524,191 @@ function buildInvoiceDOM(tx){
     el.setAttribute('data-invno',tx.invNo||'faktur');
     el.style.width='640px';el.style.minHeight='auto';el.style.padding='24px 26px 18px';el.style.background='#ffffff';el.style.color='#0f172a';el.style.fontFamily="'Inter',-apple-system,sans-serif";el.style.lineHeight='1.45';el.style.boxSizing='border-box';
     var h='';
+
+    // === HEADER UTAMA ===
     h+='<div style="display:flex;align-items:center;gap:12px">';
     h+='<div style="width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#1e293b,#334155);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;font-family:\'Space Grotesk\',sans-serif;letter-spacing:-1px;flex-shrink:0">BL</div>';
     h+='<div style="flex:1;min-width:0"><div style="font-family:\'Space Grotesk\',sans-serif;font-size:18px;font-weight:700;letter-spacing:-.3px;line-height:1.1">PT. BIOLI LESTARI</div><div style="font-size:9px;font-weight:700;color:#3b82f6;letter-spacing:2px;text-transform:uppercase;margin-top:2px">Sistem Transaksi</div></div>';
     h+='<div style="text-align:right;flex-shrink:0;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:7px 12px"><div style="font-size:8px;font-weight:700;letter-spacing:1.5px;color:#64748b;text-transform:uppercase">'+docType+'</div><div style="font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:800;color:#0f172a;margin-top:1px">'+invNo+'</div></div>';
     h+='</div>';
-    h+='<div style="border-top:3px double #1e293b;margin:12px 0 10px"></div>';
-    h+='<div style="display:flex;justify-content:space-between;gap:10px;font-size:10px;color:#475569;margin-bottom:10px"><div>Tanggal: <b style="color:#0f172a">'+tgl+'</b></div>'+(dueStr?'<div>Jatuh Tempo: <b style="color:#0f172a">'+dueStr+'</b></div>':'<div>Perum. TKK Block P1 No.7 \u2022 Bandung</div>')+'</div>';
-    h+='<table style="width:100%;border-collapse:collapse;background:linear-gradient(135deg,#eff6ff,#f8fafc);border-left:4px solid #3b82f6;border-radius:6px;margin-bottom:12px;font-size:11px"><tbody>';
-    h+='<tr><td style="padding:7px 12px;color:#475569;font-weight:600;width:64px">Kepada</td><td style="padding:7px 8px;font-weight:700;color:#0f172a;text-transform:uppercase">'+custName+'</td><td style="padding:7px 12px;color:#475569;font-weight:600;width:56px">Kode</td><td style="padding:7px 8px;font-weight:700;color:#0f172a">'+custCode+'</td></tr>';
-    h+='<tr><td style="padding:7px 12px;color:#475569;font-weight:600">Tempo</td><td style="padding:7px 8px;font-weight:700;color:#0f172a">'+(tempo>0?tempo+' Hari':'Tunai')+'</td><td style="padding:7px 12px;color:#475569;font-weight:600">Status</td><td style="padding:7px 8px;font-weight:800;color:'+statusCol+'">'+statusTxt+'</td></tr>';
-    if(custSales)h+='<tr><td style="padding:7px 12px;color:#475569;font-weight:600">Sales</td><td colspan="3" style="padding:7px 8px;font-weight:700;color:#0f172a">'+custSales+'</td></tr>';
-    h+='</tbody></table>';
-    h+='<table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;font-size:11px;margin-bottom:12px"><thead><tr style="background:#1e293b;color:#fff"><th style="text-align:center;padding:8px 6px;width:44px;font-size:9px;letter-spacing:.5px">QTY</th><th style="text-align:left;padding:8px 8px;font-size:9px;letter-spacing:.5px">NAMA BARANG</th><th style="text-align:right;padding:8px 8px;font-size:9px;letter-spacing:.5px">HARGA</th><th style="text-align:right;padding:8px 8px;font-size:9px;letter-spacing:.5px">TOTAL</th></tr></thead><tbody>';
-    var rows=tx.rows||[];
-    if(!rows.length){h+='<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:14px">Tidak ada barang</td></tr>';}
-    rows.forEach(function(r,i){
-      var it=findItemByDesc(r.desc);var name=it?it.name:(r.desc||'-');var bg=i%2===0?'#ffffff':'#f8fafc';
-      h+='<tr style="background:'+bg+'"><td style="text-align:center;padding:7px 6px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td><td style="padding:7px 8px;border-top:1px solid #e2e8f0">'+escapeHtml(name)+'</td><td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td><td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td></tr>';
-    });
-    h+='</tbody></table>';
-    h+='<div style="border:2px solid #1e293b;border-radius:8px;overflow:hidden;margin-bottom:10px">';
-    h+='<div style="display:flex;justify-content:space-between;padding:7px 14px;font-size:11px;border-bottom:1px dashed #e2e8f0"><span style="color:#475569">Subtotal</span><span style="font-family:\'JetBrains Mono\',monospace;font-weight:600">'+fmtCurrencyFull(subTotal)+'</span></div>';
-    discDetails.forEach(function(d){h+='<div style="display:flex;justify-content:space-between;padding:7px 14px;font-size:11px;background:#fef2f2;border-bottom:1px solid #fecaca;color:#dc2626"><span>Diskon '+escapeHtml(d.cat)+' ('+d.pct+'%)</span><span style="font-family:\'JetBrains Mono\',monospace">- '+fmtCurrencyFull(d.amount)+'</span></div>';});
-    if(ongkir>0)h+='<div style="display:flex;justify-content:space-between;padding:7px 14px;font-size:11px;border-bottom:1px dashed #e2e8f0"><span style="color:#0f172a;font-weight:700">Ongkos Kirim</span><span style="font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(ongkir)+'</span></div>';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:linear-gradient(135deg,#1e293b,#334155);color:#fff"><span style="font-weight:800;font-size:13px;letter-spacing:.4px">TOTAL</span><span style="font-family:\'JetBrains Mono\',monospace;font-weight:800;font-size:17px">'+fmtCurrencyFull(finalGT)+'</span></div>';
+
+    // === HEADER BARIS 2: 3 BAGIAN (KIRI | TENGAH | KANAN) ===
+    h+='<div style="border-top:3px double #1e293b;margin:8px 0 12px"></div>';
+    h+='<div style="display:flex;justify-content:space-between;gap:10px;font-size:10px;color:#475569;margin-bottom:10px">';
+    
+    // --- KIRI ---
+    h+='<div style="flex:1; text-align:left">';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:700">Kepada:</span><span>'+custName+'</span></div>';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:700">Tempo:</span><span>'+(tempo>0?tempo+' Hari':'Tunai')+'</span></div>';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:700">Sales:</span><span>'+custSales+'</span></div>';
     h+='</div>';
-    var terb=safeTerbilang(finalGT);
-    if(terb)h+='<div style="border:1px dashed #cbd5e1;border-radius:6px;padding:7px 12px;font-size:10px;color:#334155;margin-bottom:10px"><b style="color:#0f172a;text-transform:uppercase;margin-right:6px">Terbilang</b>'+escapeHtml(terb)+'</div>';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px">';
-    h+='<div style="flex:1;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px;font-size:10px"><b style="color:#1e293b">BCA</b> 7570196833 a/n <b style="color:#1e293b">BUDI HARIYONO</b></div>';
-    if(!tx._draft)h+='<div style="flex-shrink:0;border:2.5px solid '+statusCol+';color:'+statusCol+';border-radius:6px;padding:6px 16px;font-family:\'Space Grotesk\',sans-serif;font-weight:800;font-size:13px;letter-spacing:1.5px;transform:rotate(-2deg)">'+statusTxt+'</div>';
+    
+    // --- TENGAH (SUB KATEGORI) ---
+    var mainSubCat = '';
+    var rows = tx.rows || [];
+    if(rows.length > 0){
+      var groups = { OTOMOTIF: [], PERTANIAN: [], PISTON: [], LAIN: [] };
+      rows.forEach(function(r) {
+        var it = findItemByDesc(r.desc);
+        var sc = normCat(it && it.subCat);
+        if (sc.indexOf('PERTANIAN') >= 0 || sc.indexOf('PERT') >= 0 || sc.indexOf('TANI') >= 0 || sc.indexOf('AGRI') >= 0 || sc.indexOf('AGRO') >= 0) mainSubCat = 'PERTANIAN';
+        else if (sc.indexOf('OTOMOTIF') >= 0 || sc.indexOf('OTM') >= 0 || sc.indexOf('AUTO') >= 0 || sc.indexOf('MOTOR') >= 0 || sc.indexOf('SPAREPART') >= 0) mainSubCat = 'OTOMOTIF';
+        else if (sc.indexOf('PISTON') >= 0 || sc.indexOf('PIST') >= 0 || sc.indexOf('LINER') >= 0 || sc.indexOf('SILINDER') >= 0 || sc.indexOf('CYLINDER') >= 0) mainSubCat = 'PISTON';
+        else if (!mainSubCat) mainSubCat = 'LAIN';
+      });
+    }
+    h+='<div style="flex:1; text-align:center">';
+    if(mainSubCat){
+      h+='<span style="font-weight:700;font-size:14px;color:#0f172a">';
+      h+='<span style="background:linear-gradient(135deg,#1e293b,#334155);color:#fff;padding:3px 12px;border-radius:6px">'+mainSubCat+'</span>';
+      h+='</span>';
+    } else {
+      h+='<span style="color:#94a3b8;font-size:12px">-</span>';
+    }
     h+='</div>';
+    
+    // --- KANAN (DIBUAT RATA KANAN SEMPURNA) ---
+    h+='<div style="flex:1; display:flex; flex-direction:column; align-items:flex-end; gap:4px">';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:700">Tgl Pembuatan:</span><span>'+tgl+'</span></div>';
+    h+='<div style="display:flex;align-items:center;gap:4px"><span style="font-weight:700">Jatuh Tempo:</span><span>'+(dueStr?dueStr:'-')+'</span></div>';
+    h+='</div>';
+    
+    h+='</div>';
+
+    // === TABEL BARANG ===
+    if(!rows.length){
+      h+='<table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;font-size:11px;margin-bottom:12px"><tbody><tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:14px">Tidak ada barang</td></tr></tbody></table>';
+    } else {
+      // Kelompokkan berdasarkan SUB KATEGORI
+      var groups = { OTOMOTIF: [], PERTANIAN: [], PISTON: [], LAIN: [] };
+      rows.forEach(function(r) {
+        var it = findItemByDesc(r.desc);
+        var sc = normCat(it && it.subCat);
+        if (sc.indexOf('PERTANIAN') >= 0 || sc.indexOf('PERT') >= 0 || sc.indexOf('TANI') >= 0 || sc.indexOf('AGRI') >= 0 || sc.indexOf('AGRO') >= 0) {
+          groups.PERTANIAN.push({ row: r, item: it });
+        } else if (sc.indexOf('OTOMOTIF') >= 0 || sc.indexOf('OTM') >= 0 || sc.indexOf('AUTO') >= 0 || sc.indexOf('MOTOR') >= 0 || sc.indexOf('SPAREPART') >= 0) {
+          groups.OTOMOTIF.push({ row: r, item: it });
+        } else if (sc.indexOf('PISTON') >= 0 || sc.indexOf('PIST') >= 0 || sc.indexOf('LINER') >= 0 || sc.indexOf('SILINDER') >= 0 || sc.indexOf('CYLINDER') >= 0) {
+          groups.PISTON.push({ row: r, item: it });
+        } else {
+          groups.LAIN.push({ row: r, item: it });
+        }
+      });
+
+      // Helper render tabel per grup (TANPA TITIK HITAM)
+      function renderCatTable(headers, groupRows, renderRowFn) {
+        if (groupRows.length === 0) return '';
+        var html = '<div style="margin-bottom:12px">';
+        html += '<table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;font-size:11px">';
+        html += '<thead><tr style="background:#334155;color:#fff">';
+        headers.forEach(function(hd) {
+          var align = (hd === 'HARGA' || hd === 'TOTAL') ? 'right' : (hd === 'QTY' ? 'center' : 'left');
+          var width = hd === 'QTY' ? 'width:48px' : '';
+          html += '<th style="text-align:'+align+';padding:8px 4px;font-size:9px;letter-spacing:.5px;border-right:1px solid rgba(255,255,255,.1);'+width+'">'+hd+'</th>';
+        });
+        html += '</tr></thead><tbody>';
+        
+        // PAKSA 10 BARIS — TANPA TITIK HITAM
+        var maxRows = Math.max(10, groupRows.length);
+        for (var i = 0; i < maxRows; i++) {
+          var bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+          html += '<tr style="background:'+bg+';height:22px">';
+          if (i < groupRows.length) {
+            html += renderRowFn(groupRows[i].row, groupRows[i].item);
+          } else {
+            // Baris kosong: hanya garis horisontal, tanpa isi & TANPA TITIK HITAM
+            html += '<td colspan="'+headers.length+'" style="padding:0;border-top:1px solid #e2e8f0">&#8203;</td>';
+          }
+          html += '</tr>';
+        }
+        html += '</tbody></table></div>';
+        return html;
+      }
+
+      // OTOMOTIF: QTY | KODE | HARGA | TOTAL
+      h += renderCatTable(['QTY', 'KODE', 'HARGA', 'TOTAL'], groups.OTOMOTIF, function(r, it) {
+        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+      });
+
+      // PERTANIAN: QTY | KODE | NAMA BARANG | HARGA | TOTAL
+      h += renderCatTable(['QTY', 'KODE', 'NAMA BARANG', 'HARGA', 'TOTAL'], groups.PERTANIAN, function(r, it) {
+        var name = it ? it.name : (r.desc || '-');
+        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0">'+escapeHtml(name)+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+      });
+
+      // PISTON: QTY | KODE | DESKRIPSI | HARGA | TOTAL
+      h += renderCatTable(['QTY', 'KODE', 'DESKRIPSI', 'HARGA', 'TOTAL'], groups.PISTON, function(r, it) {
+        var desc = it && it.desc ? it.desc : (r.desc || '-');
+        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0">'+escapeHtml(desc)+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+      });
+
+      // LAINNYA
+      h += renderCatTable(['QTY', 'KODE', 'NAMA BARANG', 'HARGA', 'TOTAL'], groups.LAIN, function(r, it) {
+        var name = it ? it.name : (r.desc || '-');
+        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0">'+escapeHtml(name)+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+      });
+    }
+
+    // === FOOTER (2 KOLOM) ===
+    h+='<div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:10px">';
+    // KIRI: INFO TRANSFER & TERBILANG
+    h+='<div style="flex:1; text-align:left">';
+    h+='<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px 12px;font-size:10px">';
+    h+='<div style="display:flex;align-items:center;gap:4px"><svg class="ei" style="width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><use href="#icon-bank"/></svg><b style="color:#1e293b">BCA</b> 7570196833 a/n <b style="color:#1e293b">BUDI HARIYONO</b></div>';
+    h+='</div>';
+    var terb = safeTerbilang(finalGT);
+    if (terb) {
+      h+='<div style="border:1px dashed #cbd5e1;border-radius:6px;padding:7px 12px;font-size:10px;color:#334155;margin-top:8px">';
+      h+='<b style="color:#0f172a;text-transform:uppercase;margin-right:6px">Terbilang</b>'+escapeHtml(terb);
+      h+='</div>';
+    }
+    h+='</div>';
+    // KANAN: SUBTOTAL, DISKON, GRAND TOTAL (RATA KANAN)
+    h+='<div style="flex:1; text-align:right">';
+    h+='<div style="border:2px solid #1e293b;border-radius:8px;overflow:hidden">';
+    h+='<div style="display:flex;justify-content:space-between;padding:7px 14px;font-size:11px;border-bottom:1px dashed #e2e8f0">';
+    h+='<div style="flex:1; text-align:right">';
+    h+='<div style="color:#475569">Subtotal</div>';
+    h+='<div style="font-family:\'JetBrains Mono\',monospace;font-weight:600">'+fmtCurrencyFull(subTotal)+'</div>';
+    h+='</div>';
+    h+='<div style="flex:1; text-align:right">';
+    if(discDetails.length){
+      h+='<div style="color:#475569">Diskon '+discDetails[0].cat+' ('+discDetails[0].pct+'%)</div>';
+      h+='<div style="font-family:\'JetBrains Mono\',monospace;font-weight:600">- '+fmtCurrencyFull(discDetails[0].amount)+'</div>';
+    }else{
+      h+='<div style="color:#475569;opacity:.5">Diskon</div>';
+      h+='<div style="font-family:\'JetBrains Mono\',monospace;font-weight:600;opacity:.5">- Rp 0,00</div>';
+    }
+    h+='</div>';
+    h+='</div>';
+    h+='<div style="display:flex;justify-content:flex-end;align-items:center;padding:12px 14px;background:linear-gradient(135deg,#1e293b,#334155);color:#fff">';
+    h+='<span style="font-weight:800;font-size:13px;letter-spacing:.4px">TOTAL</span>';
+    h+='<span style="font-family:\'JetBrains Mono\',monospace;font-weight:800;font-size:17px;margin-left:12px">'+fmtCurrencyFull(finalGT)+'</span>';
+    h+='</div>';
+    h+='</div>';
+    h+='</div>';
+    h+='</div>';
+
+    // === FOOTER BAWAH ===
     h+='<div style="font-size:9px;color:#94a3b8;text-align:center;padding-top:8px;border-top:1px solid #e2e8f0">Dokumen dibuat otomatis oleh sistem \u2022 PT. BIOLI LESTARI \u2022 WA 081584224616</div>';
-    el.innerHTML=h;return el;
+    
+    el.innerHTML=h;
+    return el;
   }catch(e){
     console.error('buildInvoiceDOM error:',e);
     var fb=document.createElement('div');fb.className='accurate-invoice-layout';fb.setAttribute('data-invno',(tx&&tx.invNo)||'faktur');
@@ -2527,7 +2718,47 @@ function buildInvoiceDOM(tx){
   }
 }
 function previewInvoice(tx){var node=buildInvoiceDOM(tx);var stage=document.getElementById('invoiceShareStage');stage.innerHTML='';stage.appendChild(node);document.getElementById('invoiceShareModal').classList.add('open')}
-function shareHistoryInvoice(gi){try{var ha=JSON.parse(localStorage.getItem('txHistory'))||[];var tx=ha[gi];if(!tx){alertWarning('Data tidak ditemukan');return}if(tx.isOrder){var grand=(tx.finalGrandTotal!=null)?tx.finalGrandTotal:(tx.grandTotal||0);var rows=(tx.rows||[]).map(function(r){return {code:r.code,desc:r.desc,qty:r.qty}});var txt=buildOrderShareText(tx.cust,rows,grand);window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');return}previewInvoice(tx)}catch(e){alertDanger('Gagal membuka pratinjau: '+escapeHtml(e&&e.message?e.message:String(e)))}}
+function shareHistoryInvoice(gi){
+  try{
+    var ha = JSON.parse(localStorage.getItem('txHistory')) || [];
+    var tx = ha[gi];
+    if(!tx){ alertWarning('Data tidak ditemukan'); return; }
+
+    // Mode ORDER → langsung share teks
+    if(tx.isOrder){
+      var grand = (tx.finalGrandTotal != null) ? tx.finalGrandTotal : (tx.grandTotal || 0);
+      var rows = (tx.rows || []).map(function(r){ return { code: r.code, desc: r.desc, qty: r.qty }; });
+      var txt = buildOrderShareText(tx.cust, rows, grand);
+      window.open('https://wa.me/?text=' + encodeURIComponent(txt), '_blank');
+      return;
+    }
+
+    // NOTA / RETUR / PI → popup pilihan
+    enqueuePopup({
+      type: 'question',
+      title: 'Share Faktur',
+      message: '<b>' + escapeHtml(tx.invNo) + '</b><br>' + escapeHtml(tx.cust ? tx.cust.name : '-'),
+      buttons: [
+        { text: '👁 Preview', cls: 'secondary', action: 'preview' },
+        { text: '📤 Share ke WA', cls: 'primary', action: 'share' }
+      ],
+      callback: function(a){
+        if(a === 'preview'){
+          previewInvoice(tx);
+        } else if(a === 'share'){
+          previewInvoice(tx);
+          // Auto-trigger share setelah modal terbuka
+          setTimeout(function(){
+            var inv = document.getElementById('invoiceShareStage').firstElementChild;
+            if(inv) __bioliShareInvoice(inv, tx.invNo, null, '');
+          }, 400);
+        }
+      }
+    });
+  }catch(e){
+    alertDanger('Gagal: ' + escapeHtml(e && e.message ? e.message : String(e)));
+  }
+}
 function buildCurrentDraft(){var rows=collectValidRows();var sub=0;rows.forEach(function(r){sub+=r.total});var disc=0;rows.forEach(function(r){var im=findItemByDesc(r.desc);var cat=im?im.cat:(r.cat||'');if(im&&currentCustomer&&currentCustomer.disc&&currentCustomer.disc[cat])disc+=r.total*currentCustomer.disc[cat]/100});var ongkir=parseDecField('inputOngkir')||0;var barang=Math.max(0,sub-disc);var gt=barang+ongkir;return{invNo:(document.getElementById('invPrefix').textContent||'')+(document.getElementById('invNumInput').value||''),date:new Date().toISOString(),cust:Object.assign({},currentCustomer),rows:rows,subTotal:sub,discTotal:disc,specialDiscAmount:0,ongkir:ongkir,grandTotal:barang,finalGrandTotal:gt,payments:[],paidAmount:0,isCash:false,isTransfer:false,_draft:true}}
 function getOffscreenStage(){var el=document.getElementById('offscreenInvoiceStage');if(!el){el=document.createElement('div');el.id='offscreenInvoiceStage';el.setAttribute('aria-hidden','true');el.style.cssText='position:fixed;left:-10000px;top:0;width:1200px;height:auto;pointer-events:none;z-index:-1;background:#fff;overflow:visible;';document.body.appendChild(el)}return el}
 
@@ -2640,7 +2871,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='2.9.8';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='2.9.9';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return'terbaru';if(VB_STATUS==='update')return'ada v'+VB_SERVER;if(VB_STATUS==='offline')return'offline';return'cek\u2026'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
@@ -2757,7 +2988,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if
       };
     }
   })(WRAP[w])}
-  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v2.9.6'}catch(e){}
+  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v2.9.9'}catch(e){}
   try{var sl=document.querySelector('.sp-load');if(sl)sl.textContent='Memuat sistem\u2026'}catch(e){}
   try{repairAll(document.body)}catch(e){}
   setTimeout(function(){try{repairAll(document.body)}catch(e){}},200);
