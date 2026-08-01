@@ -1590,7 +1590,7 @@ body:has(#custConverterView[style*="flex"]) .bottom-nav{transform:translateY(112
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v3.0</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v3.1</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -2983,7 +2983,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if
       };
     }
   })(WRAP[w])}
-  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.0'}catch(e){}
+  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.1'}catch(e){}
   try{var sl=document.querySelector('.sp-load');if(sl)sl.textContent='Memuat sistem\u2026'}catch(e){}
   try{repairAll(document.body)}catch(e){}
   setTimeout(function(){try{repairAll(document.body)}catch(e){}},200);
@@ -3008,7 +3008,7 @@ function autoFillCashFromTransfer(trfId,cashId,grand){
 </script>
 <script>
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW gagal:',e)})})}
-</script>
+
 /* ==========================================================
    PATCH v4: AUTO-SAVE DRAFT (GUARANTEED FIX)
    Override addNewRowDOM untuk intercept init default
@@ -3158,5 +3158,334 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   attachListeners();
   patchSaves();
 })();
+/* ==========================================================
+   PATCH v5: ORDER TO FAKTUR + LIMIT 10 BARIS
+   Fitur: Konversi Order bertahap & Hard limit rows
+   ========================================================== */
+(function() {
+  const MAX_ROWS = 10; // Batas maksimal baris faktur/retur/pi
+
+  // === 1. HARD LIMIT 10 BARIS UNTUK FAKTUR, RETUR, PI ===
+  function enforceRowLimit() {
+    const origAddRow = window.addNewRowDOM;
+    if (!origAddRow || origAddRow._limitPatched) return;
+
+    window.addNewRowDOM = function() {
+      // Cek mode: hanya batasi di nota, retur, pi (bukan order)
+      const restricted = (currentMode === 'nota' || currentMode === 'retur' || isPiMode);
+      
+      if (restricted) {
+        const tbody = document.getElementById('inputRows');
+        if (tbody && tbody.querySelectorAll('tr').length >= MAX_ROWS) {
+          // Stop penambahan baris jika sudah 10
+          return; 
+        }
+      }
+      
+      origAddRow.apply(this, arguments);
+    };
+    window.addNewRowDOM._limitPatched = true;
+  }
+
+  // === 2. KONVERSI ORDER KE FAKTUR (MAX 10 ITEM/SUBKAT SAMA) ===
+  function convertOrderToFaktur(gi) {
+    const ha = JSON.parse(localStorage.getItem('txHistory')) || [];
+    const tx = ha[gi];
+    
+    if (!tx || !tx.isOrder) return alertWarning('Bukan data order!');
+    if (tx.isCancelled) return alertWarning('Order sudah dibatalkan!');
+    
+    // Cek apakah masih ada item yang belum difaktur
+    const remainingItems = (tx.rows || []).filter(r => parseFloat(r.qty) > 0);
+    if (!remainingItems.length) return alertWarning('Semua item order sudah difaktur!');
+
+    // Kelompokkan berdasarkan Sub-Kategori
+    const groups = {};
+    remainingItems.forEach(r => {
+      const it = findItemByDesc(r.desc);
+      const subCat = normCat(it ? it.subCat : (r.subCat || 'UMUM'));
+      if (!groups[subCat]) groups[subCat] = [];
+      groups[subCat].push(r);
+    });
+
+    // Ambil grup pertama yang tersedia (prioritas urutan)
+    const firstSubCat = Object.keys(groups)[0];
+    const itemsInGroup = groups[firstSubCat];
+    
+    // Ambil max 10 item dari grup tersebut
+    const batch = itemsInGroup.slice(0, MAX_ROWS);
+    const leftover = itemsInGroup.slice(MAX_ROWS);
+    
+    // Siapkan data untuk faktur baru
+    const newRows = batch.map(r => ({
+      desc: r.desc,
+      qty: parseFloat(r.qty) || 0,
+      price: parseMoney(r.price),
+      total: (parseFloat(r.qty) || 0) * parseMoney(r.price),
+      cat: r.cat || ''
+    }));
+
+    // Hitung total batch
+    const batchTotal = newRows.reduce((s, r) => s + r.total, 0);
+
+    showConfirm(
+      `📦 <b>Konversi Order ke Faktur</b><br><br>` +
+      `Sub-Kategori: <b>${firstSubCat}</b><br>` +
+      `Item diambil: <b>${batch.length} dari ${itemsInGroup.length}</b><br>` +
+      `Nilai: <b>${fmtCurrency(batchTotal)}</b><br><br>` +
+      (leftover.length > 0 
+        ? `⚠️ Sisa ${leftover.length} item akan tetap di order.` 
+        : `✅ Semua item di sub-kategori ini akan diproses.`),
+      function(yes) {
+        if (!yes) return;
+        
+        // A. Buat Faktur Baru
+        // Set mode ke nota & load customer
+        switchMode('nota');
+        currentCustomer = tx.cust;
+        updateCodeInput(currentCustomer.code);
+        document.getElementById('nameDisplay').value = currentCustomer.name;
+        
+        // Render rows ke tabel (max 10 karena limit sudah aktif)
+        renderRowsToDOM(newRows, false);
+        calculateAll();
+        
+        // Update info customer
+        if (currentCustomer.disc) {
+          const dt = [];
+          Object.keys(currentCustomer.disc).forEach(k => {
+            if (currentCustomer.disc[k] > 0) dt.push(k + ':' + currentCustomer.disc[k] + '%');
+          });
+          document.getElementById('infoDisc').innerHTML = '<svg class="ei"><use href="#icon-tag"/></svg> Diskon: ' + (dt.length ? dt.join(', ') : '-');
+        }
+        
+        // B. Kurangi Qty di Order Asli
+        const batchDescs = new Set(batch.map(b => b.desc));
+        let reducedCount = 0;
+        let reducedValue = 0;
+        
+        tx.rows.forEach(r => {
+          if (batchDescs.has(r.desc)) {
+            const taken = newRows.find(nr => nr.desc === r.desc);
+            if (taken) {
+              const oldQty = parseFloat(r.qty) || 0;
+              const newQty = Math.max(0, oldQty - taken.qty);
+              const diffQty = oldQty - newQty;
+              const diffVal = diffQty * parseMoney(r.price);
+              
+              r.qty = newQty;
+              r.total = newQty * parseMoney(r.price);
+              reducedCount += diffQty;
+              reducedValue += diffVal;
+            }
+          }
+        });
+        
+        // Hapus row yang qty-nya jadi 0
+        tx.rows = tx.rows.filter(r => parseFloat(r.qty) > 0);
+        
+        // Simpan perubahan order
+        ha[gi] = tx;
+        try {
+          localStorage.setItem('txHistory', JSON.stringify(ha));
+        } catch(e) {
+          alertDanger('Storage penuh! Gagal update order.');
+          return;
+        }
+        
+        // C. Sinkronisasi Laporan Luar Kota (Kurangi nominal order)
+        if (typeof syncToActiveLKReport === 'function') {
+          // Kita tidak menghapus order lama, tapi mencatat pengurangan sebagai "order adjustment"
+          // Atau lebih baik: update syncedData langsung jika memungkinkan
+          // Untuk simplicity, kita biarkan auto-sync handle saat next save, 
+          // tapi karena ini edit history, kita perlu manual adjust jika laporan aktif
+          const activeId = localStorage.getItem('activeLKReportId');
+          if (activeId) {
+            const lkReports = JSON.parse(localStorage.getItem('lkReports')) || [];
+            const report = lkReports.find(r => r.id === activeId);
+            if (report && report.isActive && report.syncedData) {
+              // Cari invoice order asli di syncedData dan kurangi amount-nya
+              const invIdx = report.syncedData.invoices.findIndex(i => i.id === tx.invNo);
+              if (invIdx >= 0) {
+                const newOrderTotal = tx.rows.reduce((s, r) => s + (parseFloat(r.total) || 0), 0);
+                report.syncedData.invoices[invIdx].amount = newOrderTotal;
+                report.syncedData.invoices[invIdx].desc = tx.invNo + ' (ORDER - UPDATED)';
+                localStorage.setItem('lkReports', JSON.stringify(lkReports));
+                if (typeof updateLKSyncUI === 'function') updateLKSyncUI();
+              }
+            }
+          }
+        }
+        
+        alertSuccess(
+          `✅ <b>${batch.length} item</b> siap difaktur!<br>` +
+          `Silakan cek tabel transaksi & simpan.<br><br>` +
+          `📉 Order berkurang: <b>${reducedCount} item (${fmtCurrency(reducedValue)})</b>`
+        );
+        
+        // Refresh history jika sedang dibuka
+        if (typeof loadHistory === 'function') loadHistory();
+      }
+    );
+  }
+
+  // === 3. TAMBAH TOMBOL "FAKTURKAN" DI DETAIL ORDER ===
+  function injectFakturBtnToDetail() {
+    const origRender = window.renderHistoryDetail;
+    if (!origRender || origRender._fakturPatched) return;
+
+    window.renderHistoryDetail = function(gi) {
+      origRender.apply(this, arguments);
+      
+      const ha = JSON.parse(localStorage.getItem('txHistory')) || [];
+      const tx = ha[gi];
+      
+      // Hanya tampilkan tombol untuk ORDER yang belum selesai & belum batal
+      if (tx && tx.isOrder && !tx.isCancelled) {
+        const hasRemaining = (tx.rows || []).some(r => parseFloat(r.qty) > 0);
+        if (hasRemaining) {
+          const btnContainer = document.querySelector('.inv-detail-actions');
+          if (btnContainer) {
+            // Cek apakah tombol sudah ada
+            if (!document.getElementById('btnConvertToFaktur')) {
+              const btn = document.createElement('button');
+              btn.id = 'btnConvertToFaktur';
+              btn.className = 'inv-act-btn pay';
+              btn.innerHTML = '<svg style="stroke:#fff"><use href="#icon-file"/></svg> Fakturkan';
+              btn.onclick = function() { convertOrderToFaktur(gi); };
+              // Sisipkan sebelum tombol Share
+              btnContainer.insertBefore(btn, btnContainer.firstChild);
+            }
+          }
+        }
+      }
+    };
+    window.renderHistoryDetail._fakturPatched = true;
+  }
+
+  // === 4. OVERRIDE RENDER ROWS UNTUK ENFORCE LIMIT SAAT LOAD DRAFT/MODE ===
+  function patchRenderRows() {
+    const origRender = window.renderRowsToDOM;
+    if (!origRender || origRender._limitPatched) return;
+
+    window.renderRowsToDOM = function(data, autoAdd) {
+      const restricted = (currentMode === 'nota' || currentMode === 'retur' || isPiMode);
+      
+      if (restricted && data && data.length > MAX_ROWS) {
+        // Potong data agar max 10 baris
+        const trimmed = data.slice(0, MAX_ROWS);
+        const overflow = data.length - MAX_ROWS;
+        if (overflow > 0) {
+          console.warn(`[Limit] ${overflow} baris dipotong (max ${MAX_ROWS})`);
+        }
+        origRender.call(this, trimmed, false); // Jangan auto-add jika dipotong
+      } else {
+        origRender.apply(this, arguments);
+      }
+    };
+    window.renderRowsToDOM._limitPatched = true;
+  }
+
+  // === INIT ===
+  function init() {
+    enforceRowLimit();
+    injectFakturBtnToDetail();
+    patchRenderRows();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    setTimeout(init, 200);
+  }
+})();
+/* ==========================================================
+   PATCH v6: TAMPILKAN NOMOR URUT DI MODE ORDER
+   Override CSS hide-column hanya saat body.order-mode aktif
+   ========================================================== */
+(function() {
+  // Inject style override untuk menampilkan kolom No di mode Order
+  function injectOrderNoStyle() {
+    if (document.getElementById('order-no-style')) return;
+    const style = document.createElement('style');
+    style.id = 'order-no-style';
+    style.textContent = `
+      /* Tampilkan kolom No HANYA di mode Order */
+      body.order-mode #page-input #transTable th:nth-child(1),
+      body.order-mode #page-input #transTable td:nth-child(1) {
+        display: table-cell !important;
+        width: 8% !important;
+        min-width: 30px !important;
+        text-align: center !important;
+        font-weight: 700 !important;
+        font-family: var(--font-mono) !important;
+        font-size: 9.5px !important;
+        color: var(--text-light) !important;
+      }
+      
+      /* Sesuaikan lebar kolom lain saat No muncul di mode Order */
+      body.order-mode #page-input #transTable th:nth-child(2),
+      body.order-mode #page-input #transTable td:nth-child(2) {
+        width: 62% !important;
+        min-width: 0 !important;
+      }
+      
+      body.order-mode #page-input #transTable th:nth-child(3),
+      body.order-mode #page-input #transTable td:nth-child(3) {
+        width: 30% !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // Hook ke switchMode untuk memastikan style ter-trigger
+  function hookSwitchMode() {
+    const orig = window.switchMode;
+    if (!orig || orig._orderNoPatched) return;
+    
+    window.switchMode = function(mode) {
+      orig.apply(this, arguments);
+      // Style sudah di-handle oleh CSS selector body.order-mode
+      // Tapi kita perlu pastikan renumber berjalan setelah mode switch
+      setTimeout(function() {
+        if (typeof renumberAllRows === 'function') renumberAllRows();
+      }, 50);
+    };
+    window.switchMode._orderNoPatched = true;
+  }
+
+  // Hook ke addNewRowDOM & renderRowsToDOM untuk auto-renumber
+  function hookRowFunctions() {
+    ['addNewRowDOM', 'renderRowsToDOM'].forEach(function(fnName) {
+      const orig = window[fnName];
+      if (!orig || orig._orderNoPatched) return;
+      
+      window[fnName] = function() {
+        orig.apply(this, arguments);
+        // Renumber setelah baris bertambah/dirender
+        if (document.body.classList.contains('order-mode')) {
+          setTimeout(function() {
+            if (typeof renumberAllRows === 'function') renumberAllRows();
+          }, 30);
+        }
+      };
+      window[fnName]._orderNoPatched = true;
+    });
+  }
+
+  // Init
+  function init() {
+    injectOrderNoStyle();
+    hookSwitchMode();
+    hookRowFunctions();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    setTimeout(init, 150);
+  }
+})();
+</script>
 </body>
 </html>
