@@ -3009,5 +3009,154 @@ function autoFillCashFromTransfer(trfId,cashId,grand){
 <script>
 if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')){window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js').catch(function(e){console.warn('SW gagal:',e)})})}
 </script>
+/* ==========================================================
+   PATCH v4: AUTO-SAVE DRAFT (GUARANTEED FIX)
+   Override addNewRowDOM untuk intercept init default
+   ========================================================== */
+(function() {
+  const DRAFT_KEY = 'bioli_draft_v1';
+  let _draftTimer = null;
+  let _initIntercepted = false;
+
+  // === CORE: SAVE / LOAD / CLEAR ===
+  function saveDraft() {
+    try {
+      if (typeof saveCurrentModeState === 'function') saveCurrentModeState();
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        modeStates, currentMode, isPiMode, currentCustomer,
+        invUserEdited, manualInvMode, manualInvNumber,
+        returSourceTx, savedAt: Date.now()
+      }));
+    } catch(e) {}
+  }
+
+  function triggerSave() {
+    clearTimeout(_draftTimer);
+    _draftTimer = setTimeout(saveDraft, 500);
+  }
+
+  function clearDraft() {
+    try { localStorage.removeItem(DRAFT_KEY); } catch(e) {}
+  }
+
+  function loadDraft() {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return false;
+      const d = JSON.parse(raw);
+      if (Date.now() - d.savedAt > 604800000) { clearDraft(); return false; }
+      if (d.modeStates) modeStates = d.modeStates;
+      if (d.currentMode) currentMode = d.currentMode;
+      if (typeof d.isPiMode === 'boolean') isPiMode = d.isPiMode;
+      if (d.currentCustomer) currentCustomer = d.currentCustomer;
+      if (typeof d.invUserEdited === 'boolean') invUserEdited = d.invUserEdited;
+      if (typeof d.manualInvMode === 'boolean') manualInvMode = d.manualInvMode;
+      if (d.manualInvNumber != null) manualInvNumber = d.manualInvNumber;
+      if (d.returSourceTx) returSourceTx = d.returSourceTx;
+      return true;
+    } catch(e) { return false; }
+  }
+
+  function renderDraft() {
+    try {
+      setInvNumPreview();
+      updateInvDateDisplay();
+      loadModeState(isPiMode ? 'pi' : currentMode);
+      updatePiModeUI();
+      renderTransMenu();
+      calculateAll();
+    } catch(e) { console.warn('[Draft] render err:', e); }
+  }
+
+  // === STRATEGI KUNCI: INTERCEPT addNewRowDOM ===
+  // Init default memanggil addNewRowDOM() FIXED_ROWS kali.
+  // Kita wrap fungsi ini: setelah panggilan terakhir selesai,
+  // kita tahu init default sudah selesai → saatnya tawarkan draft.
+  function interceptInit() {
+    if (_initIntercepted) return;
+    if (typeof addNewRowDOM !== 'function') return;
+    
+    const origAddRow = window.addNewRowDOM;
+    let callCount = 0;
+    
+    window.addNewRowDOM = function() {
+      origAddRow.apply(this, arguments);
+      callCount++;
+      
+      // FIXED_ROWS = 10 (konstanta di kode asli)
+      // Setelah panggilan ke-10, init default selesai
+      if (callCount === (typeof FIXED_ROWS !== 'undefined' ? FIXED_ROWS : 10)) {
+        _initIntercepted = true;
+        // Restore fungsi asli segera agar tidak mengganggu operasi normal
+        window.addNewRowDOM = origAddRow;
+        
+        // Cek draft SETELAH init selesai
+        setTimeout(function() {
+          const raw = localStorage.getItem(DRAFT_KEY);
+          if (!raw) return;
+          
+          try {
+            const d = JSON.parse(raw);
+            if (Date.now() - d.savedAt > 604800000) { clearDraft(); return; }
+          } catch(e) { clearDraft(); return; }
+          
+          showConfirm(
+            '📝 <b>Draft transaksi ditemukan!</b><br><br>Lanjutkan draft terakhir?',
+            function(yes) {
+              if (yes) {
+                loadDraft();
+                renderDraft();
+                alertSuccess('Draft dimuat kembali!');
+              } else {
+                clearDraft();
+              }
+            }
+          );
+        }, 50);
+      }
+    };
+    _initIntercepted = true;
+  }
+
+  // === LISTENERS ===
+  function attachListeners() {
+    const pg = document.getElementById('page-input');
+    if (!pg) return;
+    pg.addEventListener('input', function(e) {
+      if (e.target.matches && e.target.matches(
+        '.desc-input,.qty-input,.price-input,.order-desc-input,#inputOngkir,#codeInputDefault'
+      )) triggerSave();
+    }, true);
+
+    ['selectCustomer','switchMode','togglePiMode'].forEach(function(fn) {
+      const orig = window[fn];
+      if (orig && !orig._ds) {
+        window[fn] = function() { orig.apply(this, arguments); triggerSave(); };
+        window[fn]._ds = true;
+      }
+    });
+  }
+
+  // === CLEAR ON SAVE ===
+  function patchSaves() {
+    ['doSaveTransaction','saveOrderTransaction','savePiTransaction','saveReturFromTable']
+    .forEach(function(fn) {
+      const orig = window[fn];
+      if (orig && !orig._ds) {
+        window[fn] = function() {
+          var r = orig.apply(this, arguments);
+          setTimeout(clearDraft, 100);
+          return r;
+        };
+        window[fn]._ds = true;
+      }
+    });
+  }
+
+  // === JALANKAN SEGERA ===
+  interceptInit();   // ← INI KUNCINYA: wrap SEBELUM DOMContentLoaded jalan
+  attachListeners();
+  patchSaves();
+})();
 </body>
 </html>
