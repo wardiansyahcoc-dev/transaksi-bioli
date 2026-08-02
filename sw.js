@@ -1,92 +1,105 @@
-/* =====================================================================
-   PT. BIOLI LESTARI — Service Worker  •  v3.2
-   Strategi:
-   • HTML / navigasi : network-first (update selalu tembus),
-                       fallback cache saat offline.
-   • File lokal lain : cache-first (buka cepat).
-   • CDN (font/lib)  : stale-while-revalidate (offline aman,
-                       versi baru tetap diambil di latar).
-   • version.json    : TIDAK dicache — wajib kena jaringan supaya
-                       cek versi (vb_check) selalu akurat.
-   PENTING: naikkan CACHE_NAME setiap rilis versi baru agar cache
-   lama otomatis dibuang saat activate.
-   ===================================================================== */
-const CACHE_NAME = 'bioli-cache-v3.2';
-const PRECACHE = ['./', './manifest.json', './icon.svg'];
+/* ============================================================
+   sw.js — Service Worker · PT. BIOLI LESTARI
+   ------------------------------------------------------------
+   Navigasi      : network-first (race timeout) + fallback cache
+   version.json  : network-only  (cek update selalu akurat)
+   same-origin   : stale-while-revalidate
+   cross-origin  : cache-first   (CDN: font / xlsx / html2canvas)
+   ============================================================ */
+const CACHE       = 'bioli-v3.1';
+const NAV_TIMEOUT = 3500;
+const CORE = [
+  './', './index.html', './manifest.json', './icon.svg',
+  './icon-192.png', './icon-512.png', './icon-180.png', './maskable-512.png'
+];
 
-self.addEventListener('install', function (e) {
-  e.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function (c) { return c.addAll(PRECACHE); })
-      .then(function () { return self.skipWaiting(); })
-  );
+/* ---- lifecycle ---- */
+self.addEventListener('install', (e) => {
+  e.waitUntil((async () => {
+    const cache = await caches.open(CACHE);
+    // per-item: satu 404 TIDAK menggagalkan install
+    await Promise.all(CORE.map((u) => cache.add(u).catch(() => null)));
+    await self.skipWaiting();
+  })());
 });
 
-self.addEventListener('activate', function (e) {
-  e.waitUntil(
-    caches.keys().then(function (keys) {
-      return Promise.all(
-        keys.filter(function (k) { return k !== CACHE_NAME; })
-            .map(function (k) { return caches.delete(k); })
-      );
-    }).then(function () { return self.clients.claim(); })
-  );
+self.addEventListener('activate', (e) => {
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+    await self.clients.claim();
+  })());
 });
 
-self.addEventListener('fetch', function (e) {
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+/* ---- helpers ---- */
+function sameOrigin(url) {
+  try { return new URL(url, self.location.href).origin === self.location.origin; }
+  catch (_) { return false; }
+}
+function cacheable(r) { return r && (r.ok || r.type === 'opaque'); }
+
+// stale-while-revalidate (aset same-origin)
+async function swr(req) {
+  const cache = await caches.open(CACHE);
+  const hit = await cache.match(req);
+  const netP = fetch(req).then((r) => { if (cacheable(r)) cache.put(req, r.clone()); return r; }).catch(() => null);
+  if (hit) { return hit; }
+  return (await netP) || hit || Response.error();
+}
+
+// cache-first (CDN cross-origin)
+async function cacheFirst(req) {
+  const cache = await caches.open(CACHE);
+  const hit = await cache.match(req);
+  if (hit) return hit;
+  try { const r = await fetch(req); if (cacheable(r)) cache.put(req, r.clone()); return r; }
+  catch (_) { return hit || Response.error(); }
+}
+
+// network-first + race timeout (navigasi dokumen)
+async function navFirst(req) {
+  const cache = await caches.open(CACHE);
+  const KEY = './index.html';
+  let timer;
+  const timeout = new Promise((res) => { timer = setTimeout(() => res('TIMEOUT'), NAV_TIMEOUT); });
+  const netP = fetch(req).then((r) => { clearTimeout(timer); return r; }).catch(() => { clearTimeout(timer); return null; });
+  const winner = await Promise.race([netP, timeout]);
+  clearTimeout(timer);
+
+  if (winner && winner !== 'TIMEOUT' && winner.ok) {
+    try { await cache.put(KEY, winner.clone()); } catch (_) {}
+    return winner;
+  }
+  // network lambat / gagal / offline → pakai shell yang ke-cache
+  const cached = (await cache.match(KEY)) || (await cache.match('./')) || (await cache.match(req));
+  if (cached) {
+    if (winner === 'TIMEOUT') { netP.then((r) => { if (cacheable(r)) cache.put(KEY, r.clone()).catch(() => {}); }); }
+    return cached;
+  }
+  return (winner && winner !== 'TIMEOUT') ? winner : Response.error();
+}
+
+/* ---- router ---- */
+self.addEventListener('fetch', (e) => {
   const req = e.request;
-  if (req.method !== 'GET') return;
-  const url = new URL(req.url);
+  if (req.method !== 'GET') return; // POST/PUT dll → lewat network
 
-  /* version.json wajib network-only (buat cek update) */
-  if (url.pathname.indexOf('version.json') !== -1) return;
+  let path = '';
+  try { path = new URL(req.url).pathname; } catch (_) { return; }
 
-  /* navigasi lintas-origin (wa.me dsb) — biarkan browser */
-  if (req.mode === 'navigate' && url.origin !== self.location.origin) return;
-
-  /* navigasi aplikasi: network-first + fallback offline */
-  if (req.mode === 'navigate') {
-    e.respondWith(
-      fetch(req).then(function (res) {
-        const copy = res.clone();
-        caches.open(CACHE_NAME).then(function (c) { c.put(req, copy); });
-        return res;
-      }).catch(function () {
-        return caches.match(req).then(function (hit) {
-          return hit || caches.match('./') || caches.match('./index.html');
-        });
-      })
-    );
+  // 1) version.json: selalu network (jangan sampai ke-cache)
+  if (path.endsWith('/version.json') || path === '/version.json') {
+    e.respondWith(fetch(req));
     return;
   }
-
-  /* file lokal: cache-first */
-  if (url.origin === self.location.origin) {
-    e.respondWith(
-      caches.match(req).then(function (hit) {
-        return hit || fetch(req).then(function (res) {
-          if (res && (res.ok || res.type === 'opaque')) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then(function (c) { c.put(req, copy); });
-          }
-          return res;
-        });
-      })
-    );
-    return;
-  }
-
-  /* CDN (font, html2canvas, xlsx): stale-while-revalidate */
-  e.respondWith(
-    caches.match(req).then(function (hit) {
-      const network = fetch(req).then(function (res) {
-        if (res && (res.ok || res.type === 'opaque')) {
-          const copy = res.clone();
-          caches.open(CACHE_NAME).then(function (c) { c.put(req, copy); });
-        }
-        return res;
-      }).catch(function () { return hit; });
-      return hit || network;
-    })
-  );
+  // 2) navigasi dokumen: network-first
+  if (req.mode === 'navigate') { e.respondWith(navFirst(req)); return; }
+  // 3) CDN: cache-first
+  if (!sameOrigin(req.url)) { e.respondWith(cacheFirst(req)); return; }
+  // 4) aset same-origin: SWR
+  e.respondWith(swr(req));
 });

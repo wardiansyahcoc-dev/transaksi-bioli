@@ -1,18 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="PT. Bioli Lestari">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#3b82f6"/>
-      <stop offset=".55" stop-color="#2563eb"/>
-      <stop offset="1" stop-color="#16a34a"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#111830"/><stop offset="1" stop-color="#0b0f1d"/>
     </linearGradient>
-    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="rgba(255,255,255,.28)"/>
-      <stop offset="1" stop-color="rgba(255,255,255,0)"/>
+    <linearGradient id="hex" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3b82f6"/><stop offset="0.55" stop-color="#2563eb"/><stop offset="1" stop-color="#16a34a"/>
     </linearGradient>
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.35"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="rr"><rect width="512" height="512" rx="112" ry="112"/></clipPath>
   </defs>
-  <rect width="512" height="512" rx="104" fill="#0f172a"/>
-  <path d="M256 70 L416 163 V349 L256 442 L96 349 V163 Z" fill="url(#g)"/>
-  <path d="M256 70 L416 163 V349 L256 442 L96 349 V163 Z" fill="url(#g2)"/>
-  <path d="M256 70 L416 163 V349 L256 442 L96 349 V163 Z" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="7"/>
-  <text x="256" y="302" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-size="148" font-weight="700" fill="#ffffff" letter-spacing="-8">BL</text>
+  <g clip-path="url(#rr)">
+    <rect width="512" height="512" fill="url(#bg)"/>
+    <rect width="512" height="512" fill="url(#glow)"/>
+    <g transform="translate(115.2 115.2) scale(4.4)">
+      <path d="M32 2.5 L57.5 17 V47 L32 61.5 L6.5 47 V17 Z" fill="url(#hex)"/>
+      <path d="M32 2.5 L57.5 17 V47 L32 61.5 L6.5 47 V17 Z" fill="url(#gloss)"/>
+      <path d="M32 2.5 L57.5 17 V47 L32 61.5 L6.5 47 V17 Z" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"/>
+      <text x="32" y="41" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-size="23" font-weight="700" fill="#ffffff" letter-spacing="-1.5">BL</text>
+    </g>
+    <rect width="512" height="256" fill="url(#gloss)"/>
+  </g>
 </svg>
