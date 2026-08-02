@@ -5,11 +5,11 @@
    same-origin   : stale-while-revalidate
    cross-origin  : cache-first   (CDN: font / xlsx / html2canvas)
    ============================================================ */
-const CACHE       = 'bioli-v3.1';
+const CACHE       = 'bioli-v3.2';
 const NAV_TIMEOUT = 3500;
 const CORE = [
   './', './index.html', './manifest.json',
-  './icon.svg', './icon-192.png', './icon-152.png'
+  './icon-192.png', './icon-152.png'
 ];
 
 /* ---- lifecycle ---- */
