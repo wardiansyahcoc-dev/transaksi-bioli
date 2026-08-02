@@ -1,7 +1,7 @@
 {
-  "version": "3.1",
+  "version": "3.3",
   "releaseDate": "2026-08-02",
   "minVersion": "3.0",
   "forceUpdate": false,
-  "notes": "Rilis stabil: converter Pertanian & Piston, halaman Gabung JSON terpisah, perapihan modal & CSS, SW offline-ready."
+  "notes": "v3.3: icon aplikasi diperbarui (logo resmi), sinkronisasi manifest & SW, perapihan PWA."
 }

@@ -1,28 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="PT. Bioli Lestari">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#111830"/><stop offset="1" stop-color="#0b0f1d"/>
-    </linearGradient>
-    <linearGradient id="hex" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#3b82f6"/><stop offset="0.55" stop-color="#2563eb"/><stop offset="1" stop-color="#16a34a"/>
-    </linearGradient>
-    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="42%" r="55%">
-      <stop offset="0" stop-color="#3b82f6" stop-opacity="0.35"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/>
-    </radialGradient>
-    <clipPath id="rr"><rect width="512" height="512" rx="112" ry="112"/></clipPath>
-  </defs>
-  <g clip-path="url(#rr)">
-    <rect width="512" height="512" fill="url(#bg)"/>
-    <rect width="512" height="512" fill="url(#glow)"/>
-    <g transform="translate(115.2 115.2) scale(4.4)">
-      <path d="M32 2.5 L57.5 17 V47 L32 61.5 L6.5 47 V17 Z" fill="url(#hex)"/>
-      <path d="M32 2.5 L57.5 17 V47 L32 61.5 L6.5 47 V17 Z" fill="url(#gloss)"/>
-      <path d="M32 2.5 L57.5 17 V47 L32 61.5 L6.5 47 V17 Z" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1.4"/>
-      <text x="32" y="41" text-anchor="middle" font-family="'Space Grotesk',system-ui,sans-serif" font-size="23" font-weight="700" fill="#ffffff" letter-spacing="-1.5">BL</text>
-    </g>
-    <rect width="512" height="256" fill="url(#gloss)"/>
+  <!-- latar putih full-bleed (aman maskable & mirip logo asli) -->
+  <rect width="512" height="512" fill="#ffffff"/>
+  <!-- cincin luar navy -->
+  <circle cx="256" cy="256" r="188" fill="none" stroke="#16235c" stroke-width="22"/>
+  <!-- gear merah (atas, di antara dua lengan Y) -->
+  <g transform="translate(256,150)" fill="#e23b2e">
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(0)"/>
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(45)"/>
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(90)"/>
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(135)"/>
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(180)"/>
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(225)"/>
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(270)"/>
+    <rect x="-7" y="-44" width="14" height="18" rx="3" transform="rotate(315)"/>
+    <circle r="30"/>
+    <circle r="13" fill="#ffffff"/>
+    <circle r="5"/>
+  </g>
+  <!-- simbol Y navy (lengan ganda + batang) -->
+  <g fill="none" stroke="#16235c" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M150 176 L256 250 L362 176" stroke-width="30"/>
+    <path d="M256 250 L256 372" stroke-width="30"/>
+    <path d="M176 214 L256 272 L336 214" stroke-width="14"/>
+  </g>
+  <!-- 6 bintang merah (3 kiri + 3 kanan, mengapit batang bawah) -->
+  <g fill="#e23b2e">
+    <polygon points="0,-1 0.235,-0.324 0.951,-0.309 0.381,0.124 0.588,0.809 0,0.4 -0.588,0.809 -0.381,0.124 -0.951,-0.309 -0.235,-0.324" transform="translate(176,300) scale(17)"/>
+    <polygon points="0,-1 0.235,-0.324 0.951,-0.309 0.381,0.124 0.588,0.809 0,0.4 -0.588,0.809 -0.381,0.124 -0.951,-0.309 -0.235,-0.324" transform="translate(176,338) scale(17)"/>
+    <polygon points="0,-1 0.235,-0.324 0.951,-0.309 0.381,0.124 0.588,0.809 0,0.4 -0.588,0.809 -0.381,0.124 -0.951,-0.309 -0.235,-0.324" transform="translate(176,376) scale(17)"/>
+    <polygon points="0,-1 0.235,-0.324 0.951,-0.309 0.381,0.124 0.588,0.809 0,0.4 -0.588,0.809 -0.381,0.124 -0.951,-0.309 -0.235,-0.324" transform="translate(336,300) scale(17)"/>
+    <polygon points="0,-1 0.235,-0.324 0.951,-0.309 0.381,0.124 0.588,0.809 0,0.4 -0.588,0.809 -0.381,0.124 -0.951,-0.309 -0.235,-0.324" transform="translate(336,338) scale(17)"/>
+    <polygon points="0,-1 0.235,-0.324 0.951,-0.309 0.381,0.124 0.588,0.809 0,0.4 -0.588,0.809 -0.381,0.124 -0.951,-0.309 -0.235,-0.324" transform="translate(336,376) scale(17)"/>
   </g>
 </svg>
