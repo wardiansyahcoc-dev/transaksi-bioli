@@ -1590,7 +1590,15 @@ body.order-mode .fa-totals .ft-grand .ft-label, body.order-mode .fa-totals .ft-g
   <symbol id="icon-list" viewBox="0 0 24 24"><line x1="8" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="18" x2="20" y2="18"/><line x1="4" y1="6" x2="4.01" y2="6"/><line x1="4" y1="12" x2="4.01" y2="12"/><line x1="4" y1="18" x2="4.01" y2="18"/></symbol>
   <symbol id="icon-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></symbol>
 </svg>
-
+<script>
+  window.addEventListener('load', function () {
+    try {
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock().catch(function(){});
+      }
+    } catch (e) {}
+  });
+</script>
 <script>
 	// [PATCH] Sembunyikan kolom "No" di header tabel transaksi saat load
 document.addEventListener('DOMContentLoaded', function(){
