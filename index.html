@@ -1223,7 +1223,7 @@ body.order-mode .fa-totals .ft-grand .ft-label, body.order-mode .fa-totals .ft-g
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v3.4</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v3.5</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -2456,11 +2456,11 @@ function toggleStockReadyFilter(){updateStockReadyFilterDropdown();document.getE
 function applyStockReadyFilter(v){state.stock.filterReady=v;state.stock.page=1;document.getElementById('stockReadyFilterMenu').classList.remove('open');updateStockReadyFilterDropdown();renderStockTable()}
 function toggleColSettings(t){const p=document.getElementById(t+'ColSettings');if(p)p.classList.toggle('visible');renderColToggles(t)}
 function saveColVisibility(){localStorage.setItem('colVisibility',JSON.stringify(colVisibility))}
-function renderColToggles(t){const c=document.getElementById(t+'ColToggles');if(!c)return;const l={stock:{no:'No',name:'Nama',code:'Code',stock:'Stok',min:'Min',price:'Harga',desc:'Desc'},item:{no:'No',name:'Nama',code:'Code',cat:'Kat',subCat:'Sub',size:'OS',stock:'Stok',min:'Min',price:'Harga'},cust:{no:'No',code:'Kode',name:'Nama',tempo:'Tempo',disc:'Diskon',sales:'Sales'}};c.innerHTML=Object.keys(l[t]).map(k=>'<button class="col-toggle-btn '+(colVisibility[t][k]!==false?'active':'')+'" onclick="toggleColumn(\''+t+'\',\''+k+'\')">'+l[t][k]+'</button>').join('')}
-function toggleColumn(t,col){colVisibility[t][col]=!colVisibility[t][col];saveColVisibility();renderColToggles(t);applyColumnVisibility(t)}
+function renderColToggles(t){const c=document.getElementById(t+'ColToggles');if(!c)return;const l={stock:{no:'No',name:'Nama',code:'Code',size:'OS',stock:'Stok',min:'Min',price:'Harga',desc:'Desc'},item:{no:'No',name:'Nama',code:'Code',cat:'Kat',subCat:'Sub',size:'OS',stock:'Stok',min:'Min',price:'Harga'},cust:{no:'No',code:'Kode',name:'Nama',tempo:'Tempo',disc:'Diskon',sales:'Sales'}};c.innerHTML=Object.keys(l[t]).map(k=>'<button class="col-toggle-btn '+(colVisibility[t][k]!==false?'active':'')+'" onclick="toggleColumn(\''+t+'\',\''+k+'\')">'+l[t][k]+'</button>').join('')}
+function toggleColumn(t,col){colVisibility[t][col]=(colVisibility[t][col]===false)?true:false;saveColVisibility();renderColToggles(t);applyColumnVisibility(t)}
 function applyColumnVisibility(t){const scopeId=t==='stock'?'page-stock':t==='item'?'page-master':'page-customer';const scope=document.getElementById(scopeId);if(!scope)return;Object.keys(colVisibility[t]).forEach(col=>{const v=colVisibility[t][col]!==false;scope.querySelectorAll('[data-col="'+col+'"]').forEach(el=>{el.style.display=v?'':'none'})})}
 function renderTable(type){let data,page,list,infoEl;if(type==='item'){data=items.filter(i=>(!state.item.search||i.name.toLowerCase().indexOf(state.item.search)>=0||i.cat.toLowerCase().indexOf(state.item.search)>=0||(i.code&&i.code.toLowerCase().indexOf(state.item.search)>=0))&&(!state.item.filter||normCat(i.cat)===state.item.filter));data.sort((a,b)=>normCat(a.cat).localeCompare(normCat(b.cat))||a.name.localeCompare(b.name));page=state.item.page;list=document.getElementById('itemList');infoEl=document.getElementById('itemInfo')}else{data=customers.filter(c=>!state.cust.search||c.code.toLowerCase().indexOf(state.cust.search)>=0||c.name.toLowerCase().indexOf(state.cust.search)>=0||(c.sales&&c.sales.toLowerCase().indexOf(state.cust.search)>=0));page=state.cust.page;list=document.getElementById('custList');infoEl=document.getElementById('custInfo')}if(!data.length){list.innerHTML=E('<div class="ml-empty"><svg class="ei lg"><use href="#icon-box"/></svg> Tidak ada data</div>');infoEl.textContent='0 data';return}const tp=Math.ceil(data.length/ROWS_PER_PAGE);if(page>tp)page=tp;if(page<1)page=1;const pd=data.slice((page-1)*ROWS_PER_PAGE,page*ROWS_PER_PAGE),off=(page-1)*ROWS_PER_PAGE;let html='';if(type==='item')pd.forEach((item,i)=>{const gi=items.indexOf(item),stk=stockData[item.name]||0,sc=stk>0?'ok':stk===0?'zero':'out',ac=catAccent(item.cat);html+='<div class="ml-card" data-idx="'+gi+'" style="--accent-cat:'+ac+';--i:'+(i%14)+'" onclick="openItemModal('+gi+')"><span class="ml-no" data-col="no">#'+(off+i+1)+'</span><div class="ml-top"><div class="ml-name" data-col="name">'+escapeHtml(item.name)+'</div><div class="ml-price" data-col="price">'+fmtCurrency(item.price)+'</div></div><div class="ml-meta"><span class="ml-tag code" data-col="code">'+escapeHtml(item.code||'\u2022')+'</span><span class="ml-tag cat" data-col="cat" style="--accent-cat:'+ac+'">'+escapeHtml(item.cat||'\u2022')+'</span><span class="ml-stock '+sc+'" data-col="stock"><svg class="ei"><use href="#icon-box"/></svg> '+stk+'</span></div></div>'});else pd.forEach((cust,i)=>{const gi=customers.indexOf(cust),ac=catAccent(cust.code),nm=cleanCustName(cust.name,cust.code);const tempoHtml=cust.tempo>0?'<div class="ml-tempo" data-col="tempo"><svg class="ei"><use href="#icon-clock"/></svg> '+cust.tempo+'h</div>':'<div class="ml-tempo cash" data-col="tempo"><svg class="ei"><use href="#icon-wallet"/></svg> Tunai</div>';const salesHtml=cust.sales?'<div class="ml-meta" data-col="sales"><span class="ml-tag sales"><svg class="ei"><use href="#icon-users"/></svg> '+escapeHtml(cust.sales)+'</span></div>':'';let discInner='';const dkeys=cust.disc?Object.keys(cust.disc).filter(k=>cust.disc[k]>0):[];if(dkeys.length)discInner=dkeys.map(k=>'<span class="cd-pill" style="--h:'+catHue(k)+'"><span class="cd-cat">'+escapeHtml(k)+'</span><span class="cd-pct">'+cust.disc[k]+'%</span></span>').join('');else discInner='<span class="cd-none">Tidak ada diskon</span>';html+='<div class="ml-card cust-card" data-idx="'+gi+'" style="--accent-cat:'+ac+';--i:'+(i%14)+'" onclick="openCustModal('+gi+')"><span class="ml-no" data-col="no">#'+(off+i+1)+'</span><div class="ml-top"><div class="ml-name" data-col="name">'+escapeHtml(nm)+'</div><span class="ml-tag code" data-col="code">'+escapeHtml(cust.code)+'</span>'+tempoHtml+'</div>'+salesHtml+'<div class="cd-disc" data-col="disc">'+discInner+'</div></div>'});list.innerHTML=E(html);infoEl.textContent=data.length+' data (Hal '+page+'/'+tp+')';applyColumnVisibility(type);playListAnim(list)}
-function renderStockTable(){const data=items.filter(item=>{const ms=!state.stock.search||item.name.toLowerCase().indexOf(state.stock.search)>=0||item.cat.toLowerCase().indexOf(state.stock.search)>=0;const mc=!state.stock.filterCat||normCat(item.cat)===state.stock.filterCat;const stock=stockData[item.name]||0;const mr=state.stock.filterReady==='ready'?stock>0:state.stock.filterReady==='minus'?stock<=0:true;return ms&&mc&&mr});data.sort((a,b)=>normCat(a.cat).localeCompare(normCat(b.cat))||a.name.localeCompare(b.name));const list=document.getElementById('stockList'),infoEl=document.getElementById('stockInfo');if(!data.length){list.innerHTML=E('<div class="ml-empty"><svg class="ei lg"><use href="#icon-box"/></svg> Tidak ada data</div>');infoEl.textContent='0 data';return}let tp=Math.ceil(data.length/STOCK_PER_PAGE);if(state.stock.page>tp)state.stock.page=tp;if(state.stock.page<1)state.stock.page=1;const pd=data.slice((state.stock.page-1)*STOCK_PER_PAGE,state.stock.page*STOCK_PER_PAGE),gs=(state.stock.page-1)*STOCK_PER_PAGE;list.innerHTML=E(pd.map((item,i)=>{const gi=items.indexOf(item),stock=stockData[item.name]||0,sc=stock>0?'ok':stock===0?'zero':'out',ac=catAccent(item.cat);return '<div class="ml-card" style="--accent-cat:'+ac+';--i:'+(i%14)+'" onclick="openQuickStock('+gi+')"><span class="ml-no" data-col="no">#'+(gs+i+1)+'</span><div class="ml-top"><div class="ml-name" data-col="name">'+escapeHtml(item.name)+'</div><div class="ml-stock big '+sc+'" data-col="stock"><svg class="ei"><use href="#icon-box"/></svg> '+stock+'</div></div><div class="ml-meta"><span class="ml-tag code" data-col="code">'+escapeHtml(item.code||'\u2022')+'</span><span class="ml-tag cat" data-col="cat" style="--accent-cat:'+ac+'">'+escapeHtml(item.cat||'\u2022')+'</span><span class="ml-price inline" data-col="price">'+fmtCurrency(item.price)+'</span></div></div>'}).join(''));infoEl.textContent=data.length+' data (Hal '+state.stock.page+'/'+tp+')';applyColumnVisibility('stock');playListAnim(list)}
+function renderStockTable(){const data=items.filter(item=>{const q=state.stock.search;const ms=!q||item.name.toLowerCase().indexOf(q)>=0||item.cat.toLowerCase().indexOf(q)>=0||((item.desc||'').toLowerCase().indexOf(q)>=0)||((item.code||'').toLowerCase().indexOf(q)>=0)||((item.subCat||'').toLowerCase().indexOf(q)>=0)||((item.size||'').toLowerCase().indexOf(q)>=0);const mc=!state.stock.filterCat||normCat(item.cat)===state.stock.filterCat;const stock=stockData[item.name]||0;const mr=state.stock.filterReady==='ready'?stock>0:state.stock.filterReady==='minus'?stock<=0:true;return ms&&mc&&mr});data.sort((a,b)=>normCat(a.cat).localeCompare(normCat(b.cat))||a.name.localeCompare(b.name));const list=document.getElementById('stockList'),infoEl=document.getElementById('stockInfo');if(!data.length){list.innerHTML=E('<div class="ml-empty"><svg class="ei lg"><use href="#icon-box"/></svg> Tidak ada data</div>');infoEl.textContent='0 data';return}let tp=Math.ceil(data.length/STOCK_PER_PAGE);if(state.stock.page>tp)state.stock.page=tp;if(state.stock.page<1)state.stock.page=1;const pd=data.slice((state.stock.page-1)*STOCK_PER_PAGE,state.stock.page*STOCK_PER_PAGE),gs=(state.stock.page-1)*STOCK_PER_PAGE;list.innerHTML=E(pd.map((item,i)=>{const gi=items.indexOf(item),stock=stockData[item.name]||0,sc=stock>0?'ok':stock===0?'zero':'out',ac=catAccent(item.cat);return '<div class="ml-card" style="--accent-cat:'+ac+';--i:'+(i%14)+'" onclick="openQuickStock('+gi+')"><span class="ml-no" data-col="no">#'+(gs+i+1)+'</span><div class="ml-top"><div class="ml-name" data-col="name">'+escapeHtml(item.name)+'</div><div class="ml-stock big '+sc+'" data-col="stock"><svg class="ei"><use href="#icon-box"/></svg> '+stock+'</div></div><div class="ml-meta"><span class="ml-tag code" data-col="code">'+escapeHtml(item.code||'\u2022')+'</span>'+(item.size?'<span class="ml-tag" data-col="size" style="font-weight:800">OS '+escapeHtml(item.size)+'</span>':'')+'<span class="ml-tag cat" data-col="cat" style="--accent-cat:'+ac+'">'+escapeHtml(item.cat||'\u2022')+'</span><span class="ml-price inline" data-col="price">'+fmtCurrency(item.price)+'</span></div>'+(item.desc?'<div data-col="desc" style="font-size:9px;color:var(--text-light);margin-top:5px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><svg class="ei" style="width:10px;height:10px;vertical-align:-1px"><use href="#icon-info"/></svg> '+escapeHtml(item.desc)+'</div>':'')+'</div>'}).join(''));infoEl.textContent=data.length+' data (Hal '+state.stock.page+'/'+tp+')';applyColumnVisibility('stock');playListAnim(list)}
 function syncSearchClear(input){const w=input&&input.closest?input.closest('.search-field'):null;if(w)w.classList.toggle('has-value',!!input.value)}
 function clearSearchBox(btn){const w=btn.closest('.search-field');if(!w)return;const input=w.querySelector('.sf-input');if(!input)return;input.value='';syncSearchClear(input);const type=w.dataset.type;if(type==='history'){state.history.search='';state.history.page=1;loadHistory()}else if(type==='stock'){state.stock.search='';state.stock.page=1;renderStockTable()}else if(type==='item'){state.item.search='';state.item.page=1;renderTable('item')}else if(type==='cust'){state.cust.search='';state.cust.page=1;renderTable('cust')}else if(type==='settlement'){renderSettlementList()}}
 let searchTimeout=null;function debounceSearch(type){clearTimeout(searchTimeout);searchTimeout=setTimeout(()=>{if(type==='item'){state.item.search=document.getElementById('searchItem').value.toLowerCase();state.item.page=1;renderTable('item')}else if(type==='cust'){state.cust.search=document.getElementById('searchCust').value.toLowerCase();state.cust.page=1;renderTable('cust')}},300)}
@@ -2511,7 +2511,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='3.4';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='3.5';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return'terbaru';if(VB_STATUS==='update')return'ada v'+VB_SERVER;if(VB_STATUS==='offline')return'offline';return'cek\u2026'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
@@ -2628,7 +2628,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if
       };
     }
   })(WRAP[w])}
-  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.4'}catch(e){}
+  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.5'}catch(e){}
   try{var sl=document.querySelector('.sp-load');if(sl)sl.textContent='Memuat sistem\u2026'}catch(e){}
   try{repairAll(document.body)}catch(e){}
   setTimeout(function(){try{repairAll(document.body)}catch(e){}},200);
@@ -3189,11 +3189,13 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
   function pickObjVal(o,keys){for(var k in o){if(Object.prototype.hasOwnProperty.call(o,k)){if(keys.indexOf(normKey(k))>=0)return o[k];}}return undefined;}
   function normalizePsObject(o){if(o==null||typeof o!=='object')return null;var name=pickObjVal(o,['name','namabarang','nama','barang','item']);var code=pickObjVal(o,['code','kodebarang','kode','codebarang','sku']);var size=pickObjVal(o,['size','ukuran','sizeid','diameter']);var price=pickObjVal(o,['price','harga','prc','nilai']);var minStock=pickObjVal(o,['minstock','minimumstock','minstok','stokminimal']);var stock=pickObjVal(o,['stock','stok','qty','jumlah']);var pen=pickObjVal(o,['pen']);if(name==null&&code==null&&price==null)return null;return{raw:o,name:String(name==null?'':name).trim(),code:String(code==null?'':code).trim(),size:String(size==null?'':size).trim(),price:price,minStock:minStock,stock:stock,pen:pen};}
   function parsePSJSON(text){var data=JSON.parse(text);var arr=Array.isArray(data)?data:(Array.isArray(data.items)?data.items:(Array.isArray(data.data)?data.data:null));if(!arr)throw new Error('Bukan array');return arr.map(normalizePsObject).filter(Boolean);}
-  function buildPSFromRows(rows){var map=null,headerAt=-1;for(var i=0;i<rows.length;i++){var up=rows[i].map(function(c){return String(c==null?'':c).toUpperCase().trim();});var joined=up.join(' ');if(/NAME|NAMA/.test(joined)&&/CODE|KODE/.test(joined)&&/SIZE|UKURAN/.test(joined)&&/PRICE|HARGA/.test(joined)){map={name:-1,code:-1,size:-1,price:-1,minStock:-1,stock:-1,pen:-1};rows[i].forEach(function(c,ci){var u=String(c==null?'':c).toUpperCase().trim();if(/NAME|NAMA/.test(u))map.name=ci;else if(/CODE|KODE/.test(u))map.code=ci;else if(/SIZE|UKURAN/.test(u))map.size=ci;else if(/PRICE|HARGA/.test(u))map.price=ci;else if(/MINSTOCK|MINSTOK|MIN STOCK|MIN STOK|STOCK MIN|STOK MIN/.test(u))map.minStock=ci;else if(/STOCK|STOK/.test(u))map.stock=ci;else if(/^PEN$/.test(u))map.pen=ci;});headerAt=i;break;}}var pool=headerAt>=0?rows.slice(headerAt+1):rows;var dataRows=pool.filter(isDataRow);if(!map)map={name:0,code:1,size:2,price:3,minStock:4,stock:5,pen:6};var items=[];dataRows.forEach(function(r){var get=function(i){return(i>=0&&i<r.length)?r[i]:'';};var name=String(get(map.name)==null?'':get(map.name)).trim();var code=String(get(map.code)==null?'':get(map.code)).trim();var size=String(get(map.size)==null?'':get(map.size)).trim();var price=get(map.price);if(!name&&!code)return;if(/TOTAL/.test((name+' '+code).toUpperCase()))return;var it={name:name,code:code,size:size,price:price};if(map.minStock>=0&&map.minStock<r.length)it.minStock=r[map.minStock];if(map.stock>=0&&map.stock<r.length)it.stock=r[map.stock];if(map.pen>=0&&map.pen<r.length)it.pen=r[map.pen];items.push(it);});return items;}
+function buildPSFromRows(rows){var hIdx=-1;for(var i=0;i<rows.length;i++){var joined=rows[i].map(function(c){return String(c==null?'':c).toUpperCase().trim()}).join('|');if(/NO\s*PART/.test(joined)&&/UKURAN/.test(joined)&&/HARGA/.test(joined)){hIdx=i;break}}if(hIdx>=0){var head=rows[hIdx].map(function(c){return String(c==null?'':c).toUpperCase().trim()});var ci=-1,oi=-1,ui=-1,pi=-1;head.forEach(function(u,ix){if(/NO\s*PART/.test(u))ci=ix;else if(/^OS$/.test(u))oi=ix;else if(/UKURAN/.test(u))ui=ix;else if(/HARGA/.test(u))pi=ix});var items=[];var lastHarga='';for(var k=hIdx+1;k<rows.length;k++){var r=rows[k];var get=function(ix){return(ix>=0&&ix<r.length)?String(r[ix]==null?'':r[ix]).trim():''};var rawv=function(ix){return(ix>=0&&ix<r.length)?r[ix]:''};var code=get(ci);if(!code||!/^[A-Z0-9][A-Z0-9-]*$/i.test(code))continue;var os=get(oi);var ukRaw=rawv(ui);var uk=(typeof ukRaw==='number'&&isFinite(ukRaw))?ukRaw.toFixed(2):String(ukRaw==null?'':ukRaw).trim();var hg=get(pi);if(hg)lastHarga=hg;else hg=lastHarga;if(!hg&&!os)continue;items.push({name:'',code:code,size:uk,rawHarga:hg,os:os})}return items}var map=null,headerAt=-1;for(var i=0;i<rows.length;i++){var up=rows[i].map(function(c){return String(c==null?'':c).toUpperCase().trim();});var joined=up.join(' ');if(/NAME|NAMA/.test(joined)&&/CODE|KODE/.test(joined)&&/SIZE|UKURAN/.test(joined)&&/PRICE|HARGA/.test(joined)){map={name:-1,code:-1,size:-1,price:-1,minStock:-1,stock:-1,pen:-1};rows[i].forEach(function(c,ci){var u=String(c==null?'':c).toUpperCase().trim();if(/NAME|NAMA/.test(u))map.name=ci;else if(/CODE|KODE/.test(u))map.code=ci;else if(/SIZE|UKURAN/.test(u))map.size=ci;else if(/PRICE|HARGA/.test(u))map.price=ci;else if(/MINSTOCK|MINSTOK|MIN STOCK|MIN STOK|STOCK MIN|STOK MIN/.test(u))map.minStock=ci;else if(/STOCK|STOK/.test(u))map.stock=ci;else if(/^PEN$/.test(u))map.pen=ci;});headerAt=i;break;}}var pool=headerAt>=0?rows.slice(headerAt+1):rows;var dataRows=pool.filter(isDataRow);if(!map)map={name:0,code:1,size:2,price:3,minStock:4,stock:5,pen:6};var items=[];dataRows.forEach(function(r){var get=function(i){return(i>=0&&i<r.length)?r[i]:'';};var name=String(get(map.name)==null?'':get(map.name)).trim();var code=String(get(map.code)==null?'':get(map.code)).trim();var size=String(get(map.size)==null?'':get(map.size)).trim();var price=get(map.price);if(!name&&!code)return;if(/TOTAL/.test((name+' '+code).toUpperCase()))return;var it={name:name,code:code,size:size,price:price};if(map.minStock>=0&&map.minStock<r.length)it.minStock=r[map.minStock];if(map.stock>=0&&map.stock<r.length)it.stock=r[map.stock];items.push(it);});return items;}
 
   /* ---- mapping ke format item_master Bioli ---- */
-  function prtnMap(items){var rows=[];(items||[]).forEach(function(it,i){var pr=PRTN.promoCodes.has(it.code);var p=computePrice(it.rawHarga,PRTN.roundMode);var warn=(typeof p==='number')?'':'harga non-angka';rows.push({name:it.name||'',cat:'PRTN',subCat:'PERTANIAN',code:it.code||'',size:(it.size||'')+(pr?' (PROMO)':''),desc:'',price:p,stock:0,_line:i+1,_bad:!it.name,_warn:warn,_error:!it.name?'nama kosong':null});});return{rows:rows,errors:[],total:(items||[]).length};}
-  function pistonMap(items){var rows=[];(items||[]).forEach(function(it,i){var size=String(it.size||'').trim();var p=computePrice(it.price,PRTN.roundMode);var warn=(typeof p==='number')?'':'harga non-angka';var base=(it.raw&&typeof it.raw==='object')?Object.assign({},it.raw):{};var obj=Object.assign({},base,{name:String(it.name||'').trim(),cat:'PISTON',subCat:'PISTON',code:String(it.code||'').trim(),size:size,desc:psDesc(size),price:p,minStock:toInt0(it.minStock),stock:toInt0(it.stock)});if(obj.pen!==undefined&&String(obj.pen).trim()!=='')obj.pen=String(obj.pen).trim();else delete obj.pen;obj._line=i+1;obj._bad=!it.name&&!it.code;obj._warn=warn;obj._error=(!it.name&&!it.code)?'nama & kode kosong':null;rows.push(obj);});return{rows:rows,errors:[],total:(items||[]).length};}
+function prtnMap(items){var rows=[];(items||[]).forEach(function(it,i){var pr=PRTN.promoCodes.has(it.code);var p=computePrice(it.rawHarga,PRTN.roundMode);var warn=(typeof p==='number')?'':'harga non-angka';rows.push({name:it.name||'',cat:'PRTN',subCat:'PERTANIAN',code:it.code||'',size:(it.size||'')+(pr?' (PROMO)':''),desc:'',price:p,stock:0,_line:i+1,_bad:!it.name,_warn:warn,_error:!it.name?'nama kosong':null});});return{rows:rows,errors:[],total:(items||[]).length};}
+function psParseCode(code){var segs=String(code||'').trim().split('-').filter(function(s){return s!==''});if(segs.length<2)return{brand:'',model:segs[0]||'',gradeShort:''};var brand=/^[A-Z]{2,4}$/i.test(segs[segs.length-1])?segs[segs.length-1]:'';var rest=brand?segs.slice(0,segs.length-1):segs.slice();var gradeIdx=-1,gradeShort='',model='';for(var i=0;i<rest.length;i++){if(/^0\d\d$/.test(rest[i])||/^\d{3}[A-Z]\d$/i.test(rest[i])||/^[A-Z]0\d\d$/i.test(rest[i])){gradeIdx=i;break}}if(gradeIdx>=0){var g0=rest[gradeIdx];gradeShort=/^\d+$/.test(g0)?String(parseInt(g0,10)).padStart(2,'0'):/^[A-Z]0\d\d$/i.test(g0)?(g0.charAt(0)+String(parseInt(g0.slice(1),10)).padStart(2,'0')):g0.replace(/^\d+/,'')}for(var j=0;j<rest.length;j++){if(j===gradeIdx)continue;if(/^\d+$/.test(rest[j]))continue;model=rest[j];break}return{brand:brand,model:model,gradeShort:gradeShort}}
+function psGradeFromOs(os){var s=String(os||'').trim();var m=s.match(/\(([^)]*)\)/);if(m)return String(m[1]).trim().replace(/,/g,'.');if(/PISTON\s*KIT/i.test(s)){var t=s.split(/\s+/);return String(t[t.length-1]||'').trim().replace(/,/g,'.')}return s}
+function pistonMap(items){var rows=[];(items||[]).forEach(function(it,i){var pc=psParseCode(it.code);var brand=pc.brand||PRTN.psType;var grade=(it.os!=null&&it.os!=='')?psGradeFromOs(it.os):'';var uk=String(it.size||'').trim();var size=grade?(grade+(uk?' ('+uk+')':'')):uk;var name=it.name?String(it.name).trim():[brand,pc.model,pc.gradeShort].filter(Boolean).join(' ');var desc=('PISTON KIT '+brand+' '+size).replace(/\s+/g,' ').trim();var p=computePrice(it.rawHarga!=null?it.rawHarga:it.price,PRTN.roundMode);var warn=(typeof p==='number')?'':'harga non-angka';var obj={name:name,cat:'PISTON',subCat:'PISTON',code:String(it.code||'').trim(),size:size,desc:desc,price:p,minStock:toInt0(it.minStock),stock:toInt0(it.stock)};obj._line=i+1;obj._bad=!name&&!it.code;obj._warn=warn;obj._error=(!name&&!it.code)?'nama & kode kosong':null;rows.push(obj);});return{rows:rows,errors:[],total:(items||[]).length};}
 
   var SAMPLES={
     prtn:'GOLONGAN\tKODE BARANG\tNAMA BARANG\tKODE SUB\tHARGA\nDRAT NEPEL\tZAP DR NP A 1,5X1\tDRAT NEPEL ALM 1,5X1\tTRD\t16,795\nIMPELLER\tZAP IMPL WB30 D16\tIMPELLER WB 30 DRAT 16 DAUN 3\tBL\t70,764\nSAMBUNGAN PIPA\tS.DRAT BOR SMR 2"\tSOK DRAT BOR SUMUR 2"\tBL\tCONFIRMASI',
@@ -3668,6 +3670,209 @@ body:has(#cvMergeView[style*="flex"]) .bottom-nav{transform:translateY(112%);opa
 
   function init(){buildView();installNavWraps();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+<style id="prtn-pm-css">
+#prtPmRow{display:none;align-items:center;gap:8px;margin-bottom:10px;padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:color-mix(in srgb,var(--accent) 5%,transparent)}
+#prtPmRow.show{display:flex}
+#prtPmRow .pm-rl{font-size:10px;font-weight:700;color:var(--text-light);text-transform:uppercase;letter-spacing:.4px}
+#prtPmRow select{width:auto;flex:0 0 auto;height:34px;font-weight:700}
+</style>
+<script>
+/* ==========================================================
+   PATCH v7: OPSI SUFFIX "(PM)" UNTUK PRICE LIST PERTANIAN
+   - Baris opsi (label + select) meniru "Region Impor Faktur"
+   - Kalau aktif, nama barang hasil konversi/impor Excel
+     otomatis ditulis "(PM)" di akhirnya
+   ========================================================== */
+(function(){
+  var PM_KEY='prtnPmSuffix', PM_DEF='(PM)'; // ganti '' kalau mau default mati
+
+  function pmGet(){try{var v=localStorage.getItem(PM_KEY);return v===null?PM_DEF:v;}catch(e){return PM_DEF;}}
+  function pmSet(v){try{localStorage.setItem(PM_KEY,v);}catch(e){}}
+  function isPrtn(){return typeof CV!=='undefined'&&CV.tab==='prtn';}
+
+  /* ---- 1. Baris opsi di panel kiri (di atas textarea) ---- */
+  function buildPmRow(){
+    if(document.getElementById('prtPmRow'))return;
+    var host=document.querySelector('.cv-card.cv-in .cv-card-b');
+    if(!host)return;
+    var row=document.createElement('div');
+    row.id='prtPmRow';
+    row.innerHTML='<span class="pm-rl">Suffix Nama Barang</span>'+
+      '<select id="prtPmSel" title="Tambah akhiran pada nama barang">'+
+      '<option value="">Tanpa Suffix</option>'+
+      '<option value="(PM)">Otomatis (PM)</option>'+
+      '</select>';
+    var ta=document.getElementById('cvTsv');
+    if(ta&&ta.parentNode===host)host.insertBefore(row,ta);else host.appendChild(row);
+    var sel=row.querySelector('#prtPmSel');
+    sel.value=pmGet();
+    sel.addEventListener('change',function(){
+      pmSet(sel.value);
+      if(typeof cvRun==='function')cvRun(); // re-mapping, nama langsung ke-update
+    });
+  }
+  function syncPmRow(){
+    var row=document.getElementById('prtPmRow');
+    if(!row){buildPmRow();row=document.getElementById('prtPmRow');}
+    if(!row)return;
+    row.classList.toggle('show',isPrtn()); // muncul HANYA di tab Pertanian
+    var sel=document.getElementById('prtPmSel');
+    if(sel&&sel.value!==pmGet())sel.value=pmGet();
+  }
+
+  /* ---- 2. Suntik "(PM)" ke nama sebelum render/JSON/impor ---- */
+  function applyPmSuffix(res){
+    if(!isPrtn()||!res||!res.rows)return res;
+    var suf=pmGet();
+    if(!suf)return res;
+    res.rows.forEach(function(r){
+      if(!r.name)return;
+      var n=String(r.name).replace(/\s*\(PM\)\s*$/,''); // cegah suffix dobel
+      r.name=n+' '+suf;
+    });
+    return res;
+  }
+
+  /* ---- 3. Wrap converter biar opsi ikut jalan ---- */
+  function install(){
+    if(typeof cvRender!=='function'||typeof cvUpdateUI!=='function'){setTimeout(install,80);return;}
+    if(!cvRender._pmPatched){
+      var origRender=cvRender;
+      cvRender=function(res){return origRender(applyPmSuffix(res));};
+      cvRender._pmPatched=true;
+    }
+    if(!cvUpdateUI._pmPatched){
+      var origUI=cvUpdateUI;
+      cvUpdateUI=function(){var r=origUI.apply(this,arguments);syncPmRow();return r;};
+      cvUpdateUI._pmPatched=true;
+    }
+    syncPmRow();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<script>
+/* ==========================================================
+   PATCH v8: FIX HARGA MERGED / KOSONG DI EXCEL (PRTN/PISTON)
+   - Sel di-merge diisi ulang nilainya biar kebaca di semua baris
+   - Kolom HARGA yang kosong otomatis mengikuti harga di atasnya
+   ========================================================== */
+(function(){
+  function install(){
+    if(typeof XLSX==='undefined'||!XLSX.utils||typeof XLSX.utils.sheet_to_json!=='function'){setTimeout(install,120);return;}
+    if(XLSX.utils.sheet_to_json._mgPatched)return;
+    var orig=XLSX.utils.sheet_to_json;
+
+    XLSX.utils.sheet_to_json=function(ws,opts){
+      /* 1) isi sel yang di-merge biar nilainya kebaca di semua baris */
+      try{
+        if(ws&&ws['!merges']&&ws['!merges'].length&&opts&&opts.header===1){
+          ws['!merges'].forEach(function(m){
+            var top=ws[XLSX.utils.encode_cell({r:m.s.r,c:m.s.c})];
+            if(!top||top.v==null)return;
+            for(var r=m.s.r;r<=m.e.r;r++){
+              for(var c=m.s.c;c<=m.e.c;c++){
+                if(r===m.s.r&&c===m.s.c)continue;
+                var addr=XLSX.utils.encode_cell({r:r,c:c});
+                if(!ws[addr]||ws[addr].v==null||String(ws[addr].v).trim()==='')ws[addr]={t:top.t,v:top.v};
+              }
+            }
+          });
+        }
+      }catch(e){}
+
+      var rows=orig.call(this,ws,opts);
+
+      /* 2) carry-down kolom HARGA kalau masih ada baris yang kosong */
+      try{
+        if(opts&&opts.header===1&&Array.isArray(rows)&&rows.length){
+          var hIdx=-1,hCol=-1;
+          for(var i=0;i<Math.min(rows.length,10);i++){
+            var joined=(rows[i]||[]).map(function(x){return String(x==null?'':x).toUpperCase()}).join(' ');
+            if(/HARGA/.test(joined)&&/KODE|NAMA/.test(joined)){
+              hIdx=i;
+              for(var c=0;c<rows[i].length;c++){
+                if(/HARGA/.test(String(rows[i][c]==null?'':rows[i][c]).toUpperCase())){hCol=c;break}
+              }
+              break;
+            }
+          }
+          if(hIdx===-1)hCol=(rows[0]||[]).length-1;
+          if(hCol>=0){
+            var last='';
+            for(var k=hIdx+1;k<rows.length;k++){
+              var row=rows[k]||[];
+              var v=row[hCol];
+              if(v==null||String(v).trim()===''){if(last!=='')row[hCol]=last;}
+              else last=v;
+            }
+          }
+        }
+      }catch(e){}
+      return rows;
+    };
+    XLSX.utils.sheet_to_json._mgPatched=true;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<script>
+/* ==========================================================
+   PATCH v9: FIX HEADER "HRG PROMO" + KOLOM KOSONG UJUNG
+   Biar kolom harga kebaca benar di file promo / format aneh
+   ========================================================== */
+(function(){
+  function install(){
+    if(typeof XLSX==='undefined'||!XLSX.utils||typeof XLSX.utils.sheet_to_json!=='function'){setTimeout(install,120);return;}
+    if(XLSX.utils.sheet_to_json._v9Patched)return;
+    var prev=XLSX.utils.sheet_to_json;
+    XLSX.utils.sheet_to_json=function(ws,opts){
+      var rows=prev.call(this,ws,opts);
+      try{
+        if(opts&&opts.header===1&&Array.isArray(rows)&&rows.length){
+          /* 1) buang kolom KOSONG di ujung kanan (biar tebakan kolom harga benar) */
+          var maxCols=0;rows.forEach(function(r){if((r||[]).length>maxCols)maxCols=r.length;});
+          function colEmpty(c){for(var i=0;i<rows.length;i++){var v=(rows[i]||[])[c];if(v!=null&&String(v).trim()!=='')return false}return true}
+          while(maxCols>1&&colEmpty(maxCols-1))maxCols--;
+          rows.forEach(function(r){if((r||[]).length>maxCols)r.length=maxCols;});
+
+          /* 2) normalisasi header: "HRG PROMO"/"PRICE" -> "HARGA" */
+          for(var i=0;i<rows.length;i++){
+            var r=rows[i]||[],hasKode=false,hasHrg=false,c;
+            for(c=0;c<r.length;c++){var u=String(r[c]==null?'':r[c]).toUpperCase().trim();
+              if(/KODE\s*BARANG/.test(u)||u==='KODE'||u==='CODE')hasKode=true;
+              if(/HARGA|HRG|PRICE/.test(u))hasHrg=true;}
+            if(hasKode&&hasHrg){
+              for(c=0;c<r.length;c++){var u2=String(r[c]==null?'':r[c]).toUpperCase().trim();
+                if(/HARGA|HRG|PRICE/.test(u2))r[c]='HARGA';}
+              break;
+            }
+          }
+
+          /* 3) angka format US "120,750.00" (koma+k titik) dijadikan number,
+                biar nggak salah baca. Format "16,795" (koma saja) TIDAK disentuh. */
+          var hCol=-1;
+          for(var h=0;h<Math.min(rows.length,10)&&hCol<0;h++){
+            var rh=rows[h]||[];
+            for(var c3=0;c3<rh.length;c3++){if(String(rh[c3]==null?'':rh[c3]).trim()==='HARGA'){hCol=c3;break}}
+          }
+          if(hCol>=0)rows.forEach(function(rw){
+            var v=(rw||[])[hCol];
+            if(typeof v==='string'){var s=v.trim();
+              if(/^\d{1,3}(,\d{3})+\.\d+$/.test(s))rw[hCol]=parseFloat(s.replace(/,/g,''));}
+          });
+        }
+      }catch(e){}
+      return rows;
+    };
+    XLSX.utils.sheet_to_json._v9Patched=true;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
 })();
 </script>
 </body>
