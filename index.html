@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Sistem Transaksi - PT. BIOLI LESTARI</title>
 <link rel="manifest" href="./manifest.json">
    <link rel="icon" type="image/svg+xml" href="./icon.svg">
@@ -151,7 +151,7 @@
    3. BASE & RESET
    ========================================= */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; width: 100%; font-family: var(--font-main); background: var(--bg); color: var(--text); overflow: hidden; -webkit-text-size-adjust: 100%; }
+html, body { height: 100%; width: 100%; font-family: var(--font-main); background: var(--bg); color: var(--text); overflow-x: hidden; overflow-y: auto; -webkit-text-size-adjust: 100%; }
 label { display: block; font-size: 8.5px; font-weight: 700; margin-bottom: 3px; color: var(--text-light); text-transform: uppercase; }
 input, select, textarea { width: 100%; padding: 7px 9px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 11.5px; outline: none!important; color: var(--text); background: var(--surface); font-family: var(--font-main); transition: border .2s, background .2s, box-shadow .2s; }
 input:focus, select:focus { border-color: var(--accent); background: var(--row-focus); box-shadow: 0 0 0 3px rgba(59,130,246,.08); }
@@ -792,7 +792,7 @@ body.pi-mode .price-input { pointer-events: auto!important; background: transpar
 #invoiceShareScroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.55); background-clip: padding-box; }
 #invoiceShareStage { box-shadow: 0 18px 50px rgba(0,0,0,.45); border-radius: 4px; overflow: hidden; line-height: 0; width: max-content; max-width: none; margin-inline: auto; }
 
-.accurate-invoice-layout { font-family: 'Inter', sans-serif; color: #0f172a; background: #fff; width: 1123px; min-height: 794px; padding: 30px 38px 50px; box-sizing: border-box; position: relative; line-height: 1.45; }
+.accurate-invoice-layout { font-family: 'Inter', sans-serif; color: #0f172a; background: #fff; width: 215.9mm; min-height: 304.8mm; max-width: 215.9mm; padding: 20px 28px 40px; box-sizing: border-box; position: relative; line-height: 1.45; margin: 0 auto; }
 .ac-header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 16px; border-bottom: 3px double #1e293b; margin-bottom: 18px; }
 .ac-company { flex: 1; }
 .ac-company-logo { display: flex; align-items: center; gap: 13px; margin-bottom: 4px; }
@@ -815,7 +815,13 @@ body.pi-mode .price-input { pointer-events: auto!important; background: transpar
 .ac-group-title .ac-gt-name { text-transform: uppercase; flex-shrink: 0; }
 .ac-group-title .ac-gt-sub { font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 600; letter-spacing: .4px; color: #64748b; }
 .ac-group-title .ac-gt-count { margin-left: auto; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0; color: #475569; background: #fff; border: 1px solid #e2e8f0; padding: 2px 8px; border-radius: 20px; }
-.ac-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 10.5px; border: 1px solid #cbd5e1; table-layout: fixed; }
+.ac-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 10.5px; border: 1px solid #cbd5e1; table-layout: auto; }
+/* Letter Fanfold: Kolom angka nowrap, deskripsi fleksibel */
+.ac-table th:nth-child(1), .ac-table td:nth-child(1) { width: 1%; white-space: nowrap; text-align: center; padding: 6px 4px; }
+.ac-table th:nth-child(2), .ac-table td:nth-child(2) { width: 1%; white-space: nowrap; padding: 6px 6px; }
+.ac-table th:nth-child(3), .ac-table td:nth-child(3) { width: 99%; padding: 6px 8px; }
+.ac-table th:nth-child(4), .ac-table td:nth-child(4) { width: 1%; white-space: nowrap; text-align: right; padding: 6px 6px; }
+.ac-table th:nth-child(5), .ac-table td:nth-child(5) { width: 1%; white-space: nowrap; text-align: right; padding: 6px 6px; }
 .ac-table thead { background: #1e293b; }
 .ac-table th { padding: 9px 9px; font-size: 9px; background: #1e293b; color: #fff; font-weight: 700; text-transform: uppercase; border-right: 1px solid rgba(255,255,255,.12); }
 .ac-table th:last-child { border-right: none; }
@@ -1217,7 +1223,7 @@ body.order-mode .fa-totals .ft-grand .ft-label, body.order-mode .fa-totals .ft-g
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v3.3</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v3.4</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -1647,7 +1653,8 @@ function playListAnim(el){if(!el)return;const cls=el.tagName==='TBODY'?'list-ani
 function terbilang(n){n=Math.floor(Math.abs(n));if(!isFinite(n)||isNaN(n))return '';if(n>999999999999)return '';if(n===0)return 'nol';const s=['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];if(n<12)return s[n];if(n<20)return terbilang(n-10)+' belas';if(n<100)return terbilang(Math.floor(n/10))+' puluh '+terbilang(n%10);if(n<200)return 'seratus '+terbilang(n-100);if(n<1000)return terbilang(Math.floor(n/100))+' ratus '+terbilang(n%100);if(n<2000)return 'seribu '+terbilang(n-1000);if(n<1000000)return terbilang(Math.floor(n/1000))+' ribu '+terbilang(n%1000);if(n<1000000000)return terbilang(Math.floor(n/1000000))+' juta '+terbilang(n%1000000);return terbilang(Math.floor(n/1000000000))+' miliar '+terbilang(n%1000000)}
 function safeTerbilang(rupiah){try{var v=parseFloat(rupiah)||0;if(!isFinite(v))return '';var intP=Math.floor(Math.abs(v));var decP=Math.round((Math.abs(v)-intP)*100);var t=terbilang(intP);if(!t)t='nol';t+=' Rupiah';if(decP>0){var dt=terbilang(decP);if(dt)t+=' '+dt+' Sen'}return t}catch(e){return ''}}
 function calDaysDiff(d1,d2){const a=new Date(d1.getFullYear(),d1.getMonth(),d1.getDate());const b=new Date(d2.getFullYear(),d2.getMonth(),d2.getDate());return Math.round((a-b)/86400000)}
-function tempoForTx(tx){const code=tx&&tx.cust&&tx.cust.code;if(code){const mc=customers.find(c=>c.code===code);if(mc&&mc.tempo>0)return mc.tempo}return (tx&&tx.cust&&tx.cust.tempo)||0}
+function txHasCappedSubCat(tx){if(!tx||!tx.rows||!tx.rows.length)return false;for(var i=0;i<tx.rows.length;i++){var g=lkGroupOf(tx.rows[i]);if(g==='PERTANIAN'||g==='PISTON')return true}return false}
+function tempoForTx(tx){var t=0;const code=tx&&tx.cust&&tx.cust.code;if(code){const mc=customers.find(c=>c.code===code);if(mc&&mc.tempo>0)t=mc.tempo}if(!t)t=(tx&&tx.cust&&tx.cust.tempo)||0;if(t>45&&txHasCappedSubCat(tx))t=45;return t}
 function notaDueDate(tx){const t=tempoForTx(tx);if(t<=0)return null;const d=new Date(tx.date);d.setDate(d.getDate()+t);d.setHours(0,0,0,0);return d}
 function checkCustomerOverdue(code){const ha=JSON.parse(localStorage.getItem('txHistory'))||[];const now=new Date();now.setHours(0,0,0,0);let maxOver=0;const list=[];ha.forEach(tx=>{if(tx.isCancelled||tx.isRetur||tx.isPi||tx.isOrder)return;if(!tx.cust||tx.cust.code!==code)return;if(getRemainingBalance(tx,ha)<=0)return;const due=notaDueDate(tx);if(!due)return;const over=calDaysDiff(now,due);if(over>0){list.push({invNo:tx.invNo,days:over});if(over>maxOver)maxOver=over}});if(!list.length)return{blocked:false,warn:false,maxDays:0,list:[]};if(maxOver>15)return{blocked:true,warn:false,maxDays:maxOver,list:[]};return{blocked:false,warn:true,maxDays:maxOver,list:list}}
 function catHue(s){let h=0;s=String(s||'');for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
@@ -2129,7 +2136,7 @@ function buildInvoiceDOM(tx){
     var subTotal=parseFloat(tx.subTotal)||0;
     var ongkir=getOngkir(tx);
     var discDetails=computeDiscDetails(tx);
-    var tempo=(tx.cust&&tx.cust.tempo!=null)?tx.cust.tempo:0;
+    var tempo=tempoForTx(tx);
     var due=notaDueDate(tx);
     var tgl=new Date(tx.date).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
     var dueStr=due?due.toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}):'';
@@ -2144,7 +2151,7 @@ function buildInvoiceDOM(tx){
     var el=document.createElement('div');
     el.className='accurate-invoice-layout';
     el.setAttribute('data-invno',tx.invNo||'faktur');
-    el.style.width='640px';el.style.minHeight='auto';el.style.padding='24px 26px 18px';el.style.background='#ffffff';el.style.color='#0f172a';el.style.fontFamily="'Inter',-apple-system,sans-serif";el.style.lineHeight='1.45';el.style.boxSizing='border-box';
+    el.style.width='215.9mm';el.style.minHeight='0';el.style.height='auto';el.style.maxWidth='215.9mm';el.style.padding='20px 28px 14px';el.style.background='#ffffff';el.style.color='#0f172a';el.style.fontFamily="'Inter',-apple-system,sans-serif";el.style.lineHeight='1.45';el.style.boxSizing='border-box';el.style.margin='0 auto';
     var h='';
 
     // === HEADER UTAMA ===
@@ -2217,19 +2224,23 @@ function buildInvoiceDOM(tx){
         }
       });
 
-      // Helper render tabel per grup (TANPA TITIK HITAM)
+// Helper render tabel per grup (TANPA TITIK HITAM)
+      // FIX PRESISI: QTY/KODE/HARGA/TOTAL pakai white-space:nowrap + width:1%
+      // supaya TIDAK pernah pecah jadi 2 baris; kolom nama/deskripsi yang fleksibel.
       function renderCatTable(headers, groupRows, renderRowFn) {
         if (groupRows.length === 0) return '';
+        var hasFlex = headers.indexOf('NAMA BARANG') >= 0 || headers.indexOf('DESKRIPSI') >= 0;
         var html = '<div style="margin-bottom:12px">';
-        html += '<table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;font-size:11px">';
+        html += '<table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;font-size:11px;table-layout:auto">';
         html += '<thead><tr style="background:#334155;color:#fff">';
         headers.forEach(function(hd) {
+          var isFlex = (hd === 'NAMA BARANG' || hd === 'DESKRIPSI') || (!hasFlex && hd === 'KODE');
           var align = (hd === 'HARGA' || hd === 'TOTAL') ? 'right' : (hd === 'QTY' ? 'center' : 'left');
-          var width = hd === 'QTY' ? 'width:48px' : '';
-          html += '<th style="text-align:'+align+';padding:8px 4px;font-size:9px;letter-spacing:.5px;border-right:1px solid rgba(255,255,255,.1);'+width+'">'+hd+'</th>';
+          var colW = isFlex ? 'width:99%' : 'width:1%;white-space:nowrap';
+          html += '<th style="text-align:'+align+';padding:6px 6px;font-size:8.5px;letter-spacing:.3px;border-right:1px solid rgba(255,255,255,.1);'+colW+'">'+hd+'</th>';
         });
         html += '</tr></thead><tbody>';
-        
+
         // PAKSA 10 BARIS — TANPA TITIK HITAM
         var maxRows = Math.max(10, groupRows.length);
         for (var i = 0; i < maxRows; i++) {
@@ -2238,7 +2249,6 @@ function buildInvoiceDOM(tx){
           if (i < groupRows.length) {
             html += renderRowFn(groupRows[i].row, groupRows[i].item);
           } else {
-            // Baris kosong: hanya garis horisontal, tanpa isi & TANPA TITIK HITAM
             html += '<td colspan="'+headers.length+'" style="padding:0;border-top:1px solid #e2e8f0">&#8203;</td>';
           }
           html += '</tr>';
@@ -2247,42 +2257,50 @@ function buildInvoiceDOM(tx){
         return html;
       }
 
-      // OTOMOTIF: QTY | KODE | HARGA | TOTAL
+      // Style sel: nowrap biar KODE/HARGA/TOTAL ga pernah jadi 2 baris
+      var tdQty   = 'text-align:center;padding:5px 4px;border-top:1px solid #e2e8f0;width:1%;white-space:nowrap';
+      var tdCode  = 'padding:5px 6px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;width:1%;white-space:nowrap';
+      var tdCodeF = 'padding:5px 6px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;white-space:nowrap';
+      var tdName  = 'padding:5px 6px;border-top:1px solid #e2e8f0';
+      var tdPrice = 'text-align:right;padding:5px 6px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;width:1%;white-space:nowrap';
+      var tdTotal = 'text-align:right;padding:5px 6px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700;width:1%;white-space:nowrap';
+
+      // OTOMOTIF: QTY | KODE (fleksibel, tetap nowrap) | HARGA | TOTAL
       h += renderCatTable(['QTY', 'KODE', 'HARGA', 'TOTAL'], groups.OTOMOTIF, function(r, it) {
-        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
-               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+        return '<td style="'+tdQty+'">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="'+tdCodeF+'">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="'+tdPrice+'">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="'+tdTotal+'">'+fmtCurrencyFull(r.total)+'</td>';
       });
 
-      // PERTANIAN: QTY | KODE | NAMA BARANG | HARGA | TOTAL
+      // PERTANIAN: QTY | KODE | NAMA BARANG (fleksibel) | HARGA | TOTAL
       h += renderCatTable(['QTY', 'KODE', 'NAMA BARANG', 'HARGA', 'TOTAL'], groups.PERTANIAN, function(r, it) {
         var name = it ? it.name : (r.desc || '-');
-        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
-               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
-               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0">'+escapeHtml(name)+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+        return '<td style="'+tdQty+'">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="'+tdCode+'">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="'+tdName+'">'+escapeHtml(name)+'</td>' +
+               '<td style="'+tdPrice+'">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="'+tdTotal+'">'+fmtCurrencyFull(r.total)+'</td>';
       });
 
-      // PISTON: QTY | KODE | DESKRIPSI | HARGA | TOTAL
+      // PISTON: QTY | KODE | DESKRIPSI (fleksibel) | HARGA | TOTAL
       h += renderCatTable(['QTY', 'KODE', 'DESKRIPSI', 'HARGA', 'TOTAL'], groups.PISTON, function(r, it) {
         var desc = it && it.desc ? it.desc : (r.desc || '-');
-        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
-               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
-               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0">'+escapeHtml(desc)+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+        return '<td style="'+tdQty+'">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="'+tdCode+'">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="'+tdName+'">'+escapeHtml(desc)+'</td>' +
+               '<td style="'+tdPrice+'">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="'+tdTotal+'">'+fmtCurrencyFull(r.total)+'</td>';
       });
 
-      // LAINNYA
+      // LAINNYA: sama kayak PERTANIAN
       h += renderCatTable(['QTY', 'KODE', 'NAMA BARANG', 'HARGA', 'TOTAL'], groups.LAIN, function(r, it) {
         var name = it ? it.name : (r.desc || '-');
-        return '<td style="text-align:center;padding:7px 4px;border-top:1px solid #e2e8f0">'+(r.qty!=null?r.qty:'')+'</td>' +
-               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
-               '<td style="padding:7px 8px;border-top:1px solid #e2e8f0">'+escapeHtml(name)+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace">'+fmtCurrencyFull(r.price)+'</td>' +
-               '<td style="text-align:right;padding:7px 8px;border-top:1px solid #e2e8f0;font-family:\'JetBrains Mono\',monospace;font-weight:700">'+fmtCurrencyFull(r.total)+'</td>';
+        return '<td style="'+tdQty+'">'+(r.qty!=null?r.qty:'')+'</td>' +
+               '<td style="'+tdCode+'">'+escapeHtml(it&&it.code?it.code:'-')+'</td>' +
+               '<td style="'+tdName+'">'+escapeHtml(name)+'</td>' +
+               '<td style="'+tdPrice+'">'+fmtCurrencyFull(r.price)+'</td>' +
+               '<td style="'+tdTotal+'">'+fmtCurrencyFull(r.total)+'</td>';
       });
     }
 
@@ -2493,7 +2511,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='3.3';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='3.4';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return'terbaru';if(VB_STATUS==='update')return'ada v'+VB_SERVER;if(VB_STATUS==='offline')return'offline';return'cek\u2026'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
@@ -2610,7 +2628,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if
       };
     }
   })(WRAP[w])}
-  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.3'}catch(e){}
+  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.4'}catch(e){}
   try{var sl=document.querySelector('.sp-load');if(sl)sl.textContent='Memuat sistem\u2026'}catch(e){}
   try{repairAll(document.body)}catch(e){}
   setTimeout(function(){try{repairAll(document.body)}catch(e){}},200);
