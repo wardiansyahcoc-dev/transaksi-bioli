@@ -1,7 +1,7 @@
 {
-  "version": "3.6",
+  "version": "3.7",
   "releaseDate": "2026-08-02",
   "minVersion": "3.0",
   "forceUpdate": false,
-  "notes": "v3.3: icon aplikasi diperbarui (logo resmi), sinkronisasi manifest & SW, perapihan PWA."
+  "notes": "v3.7: icon aplikasi diperbarui (logo resmi), sinkronisasi manifest & SW, perapihan PWA."
 }
