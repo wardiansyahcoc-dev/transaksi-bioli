@@ -3,5 +3,5 @@
   "releaseDate": "2026-08-06",
   "minVersion": "3.0",
   "forceUpdate": false,
-  "notes": "v4.0: icon aplikasi FULL pakai PNG asli (icon-512.png), SVG dihapus dari manifest & cache SW."
+  "notes": "v4.0: icon FULL PNG asli, manifest & SW bersih, laporan harian, CMM hanya pelunasan, anti-blokir jatuh tempo, nama barang 2 baris, filter kategori+promo, fix sinkron LK."
 }
