@@ -1223,7 +1223,7 @@ body.order-mode .fa-totals .ft-grand .ft-label, body.order-mode .fa-totals .ft-g
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v3.7</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v3.8</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -2519,7 +2519,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='3.7';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='3.8';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return'terbaru';if(VB_STATUS==='update')return'ada v'+VB_SERVER;if(VB_STATUS==='offline')return'offline';return'cek\u2026'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
@@ -2636,7 +2636,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if
       };
     }
   })(WRAP[w])}
-  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.7'}catch(e){}
+  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.8'}catch(e){}
   try{var sl=document.querySelector('.sp-load');if(sl)sl.textContent='Memuat sistem\u2026'}catch(e){}
   try{repairAll(document.body)}catch(e){}
   setTimeout(function(){try{repairAll(document.body)}catch(e){}},200);
@@ -3881,6 +3881,224 @@ body:has(#cvMergeView[style*="flex"]) .bottom-nav{transform:translateY(112%);opa
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
   else install();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v13: LAPORAN HARIAN (anti-tabrakan, layout inline)
+     ========================================================== -->
+<style id="dr-css">
+.dr-bars{display:flex;gap:10px;align-items:flex-start;min-width:640px;padding:0 4px}
+.dr-barcol{flex:1;min-width:44px;display:flex;flex-direction:column;align-items:center}
+.dr-bar{width:70%;max-width:56px;height:240px;display:flex;flex-direction:column-reverse;border-radius:4px 4px 0 0;overflow:hidden;background:repeating-linear-gradient(45deg,transparent 0 5px,rgba(128,128,128,.07) 5px 6px)}
+.dr-seg{width:100%}
+.dr-cat{margin-top:6px;font-size:8px;font-weight:800;text-align:center;color:var(--text-light);text-transform:uppercase;line-height:1.2;min-height:20px}
+.dr-legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.dr-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--text)}
+.dr-legend-item .sw{width:14px;height:14px;border-radius:3px;display:inline-block}
+</style>
+<script>
+/* LAPORAN HARIAN OMSET BANDUNG PER KATEGORI (BDG 1-4) + SHARE WA */
+(function(){
+  var DR_CATS=[
+    {label:'ZNC',wa:'ZNC',codes:['ZNC']},
+    {label:'ZCN',wa:'ZCN',codes:['ZCN']},
+    {label:'ZBK/LM',wa:'ZBK/LM',codes:['ZBK','ZBKLM']},
+    {label:'ZDB',wa:'ZDB',codes:['ZDB']},
+    {label:'ZSDB',wa:'ZSDB',codes:['ZSDB']},
+    {label:'ZSB/SKPLG/STM',wa:'ZSB/SKPLG/STM',codes:['ZSB','SKPLG','STM']},
+    {label:'ZBBS',wa:'ZBBS',codes:['ZBBS']},
+    {label:'AMPLAS',wa:'AMPLAS',codes:['AMPLAS','AM']},
+    {label:'JNC',wa:'ZBJ',codes:['JNC','ZBJ']},
+    {label:'TOOLS',wa:'TOOL',codes:['TOOLS']},
+    {label:'PISTON',wa:'PISTON',codes:['PISTON']},
+    {label:'PERTANIAN',wa:'PERTANIAN',codes:['PRTN','PERTANIAN']}
+  ];
+  var DR_LEVELS=['BDG 1','BDG 2','BDG 3','BDG 4'];
+  var DR_COLORS={'BDG 1':'#4472C4','BDG 2':'#ED7D31','BDG 3':'#A5A5A5','BDG 4':'#FFC000'};
+  var DR_BAR_H=240;
+  var DR_LAST={grid:null,start:'',end:''};
+
+  function drCatOf(row){
+    var it=(typeof findItemByDesc==='function')?findItemByDesc(row.desc):null;
+    var c=normCat((it&&it.cat)||row.cat||'');
+    var s=normCat((it&&it.subCat)||row.subCat||'');
+    var i,j,k;
+    for(i=0;i<DR_CATS.length;i++){for(j=0;j<DR_CATS[i].codes.length;j++){k=normCat(DR_CATS[i].codes[j]);if(c&&(c===k||(k.length>=3&&c.indexOf(k)===0)))return DR_CATS[i].label;}}
+    for(i=0;i<DR_CATS.length;i++){for(j=0;j<DR_CATS[i].codes.length;j++){k=normCat(DR_CATS[i].codes[j]);if(s&&(s===k||(k.length>=3&&s.indexOf(k)===0)))return DR_CATS[i].label;}}
+    return null;
+  }
+
+  function drBdgOf(tx){
+    var s=String((tx.cust&&tx.cust.sales)||'');
+    var m=s.match(/bandung\s*([1-4])/i)||s.match(/bdg\s*([1-4])/i)||s.match(/\b([1-4])\s*$/);
+    return m?('BDG '+m[1]):'BDG 1';
+  }
+
+  function drCompute(fStr,tStr){
+    var ha=JSON.parse(localStorage.getItem('txHistory'))||[];
+    var f=new Date(fStr);f.setHours(0,0,0,0);
+    var t=new Date(tStr);t.setHours(23,59,59,999);
+    var grid={};
+    DR_CATS.forEach(function(c){grid[c.label]={'BDG 1':0,'BDG 2':0,'BDG 3':0,'BDG 4':0};});
+    ha.forEach(function(tx){
+      if(tx.isCancelled||tx.isRetur||tx.isPi||tx.isOrder)return;
+      if(typeof txIsLuarKota==='function'&&txIsLuarKota(tx))return;
+      var d=new Date(tx.date);if(d<f||d>t)return;
+      var lvl=drBdgOf(tx);
+      (tx.rows||[]).forEach(function(r){
+        var cat=drCatOf(r);if(!cat)return;
+        var val=(parseFloat(r.qty)||0)*(parseMoney(r.price)||0);
+        if(val>0)grid[cat][lvl]+=val;
+      });
+    });
+    return grid;
+  }
+
+  function drNum(v){return v>0?v.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}):'0,00';}
+
+  function drRender(grid){
+    var chartEl=document.getElementById('drChart'),tableEl=document.getElementById('drTable');
+    var cats=DR_CATS.filter(function(c){var g=grid[c.label];return (g['BDG 1']+g['BDG 2']+g['BDG 3']+g['BDG 4'])>0;});
+    if(!cats.length){chartEl.innerHTML='<div style="text-align:center;color:var(--text-light);padding:26px;font-size:11px">Tidak ada data pada rentang tanggal ini.</div>';tableEl.innerHTML='';return;}
+
+    /* --- grafik --- */
+    var h='<div class="dr-bars">';
+    cats.forEach(function(c){
+      var g=grid[c.label],total=g['BDG 1']+g['BDG 2']+g['BDG 3']+g['BDG 4'];
+      h+='<div class="dr-barcol"><div class="dr-bar">';
+      DR_LEVELS.forEach(function(lvl){
+        var v=g[lvl];if(v<=0)return;
+        var pct=v/total*100;
+        h+='<div class="dr-seg" style="height:'+Math.round(pct*DR_BAR_H/100)+'px;background:'+DR_COLORS[lvl]+'" title="'+c.label+' • '+lvl+': '+fmtCurrencyFull(v)+' ('+pct.toFixed(0)+'%)"></div>';
+      });
+      h+='</div><div class="dr-cat">'+c.label+'</div></div>';
+    });
+    h+='</div><div class="dr-legend">';
+    ['BDG 4','BDG 3','BDG 2','BDG 1'].forEach(function(lvl){h+='<div class="dr-legend-item"><span class="sw" style="background:'+DR_COLORS[lvl]+'"></span>'+lvl+'</div>';});
+    h+='</div>';
+    chartEl.innerHTML=h;
+
+    /* --- tabel (semua layout inline biar gak ketimpa CSS lama) --- */
+    var B='border-bottom:1px solid var(--border);border-right:1px solid var(--border);padding:7px 8px;';
+    var sStickyTd=B+'position:sticky;left:0;z-index:2;background:var(--bg);box-shadow:1px 0 0 var(--border);white-space:nowrap;font-weight:800';
+    var sStickyTh=B+'position:sticky;left:0;z-index:3;background:var(--bg);box-shadow:1px 0 0 var(--border)';
+    var sTh=B+'background:var(--bg);font-size:9px;text-transform:uppercase;letter-spacing:.3px;color:var(--text);text-align:center;white-space:nowrap;min-width:96px';
+    var sTd=B+'text-align:right;font-family:var(--font-mono);white-space:nowrap;min-width:96px;color:var(--text)';
+    var sTdZero=B+'text-align:right;font-family:var(--font-mono);white-space:nowrap;min-width:96px;color:var(--text-light);opacity:.55';
+    var sTot=B+'text-align:right;font-family:var(--font-mono);white-space:nowrap;min-width:96px;font-weight:800;color:var(--text);background:var(--bg)';
+    var minW=(cats.length+2)*100+60;
+
+    var t='<table style="border-collapse:separate;border-spacing:0;width:100%;min-width:'+minW+'px;font-size:10px"><thead><tr><th style="'+sStickyTh+'"></th>';
+    cats.forEach(function(c){t+='<th style="'+sTh+'">'+c.label+'</th>';});
+    t+='<th style="'+sTh+'">TOTAL</th></tr></thead><tbody>';
+    var colTotals={};
+    ['BDG 4','BDG 3','BDG 2','BDG 1'].forEach(function(lvl){
+      t+='<tr><td style="'+sStickyTd+'"><span style="width:10px;height:10px;display:inline-block;border-radius:2px;margin-right:5px;vertical-align:-1px;background:'+DR_COLORS[lvl]+'"></span>'+lvl+'</td>';
+      var rowTotal=0;
+      cats.forEach(function(c){var v=grid[c.label][lvl];rowTotal+=v;colTotals[c.label]=(colTotals[c.label]||0)+v;t+='<td style="'+(v<=0?sTdZero:sTd)+'">'+drNum(v)+'</td>';});
+      t+='<td style="'+sTd+'"><b>'+drNum(rowTotal)+'</b></td></tr>';
+    });
+    var grand=0;
+    t+='<tr><td style="'+sStickyTd+'">TOTAL</td>';
+    cats.forEach(function(c){grand+=(colTotals[c.label]||0);t+='<td style="'+sTot+'">'+drNum(colTotals[c.label]||0)+'</td>';});
+    t+='<td style="'+sTot+'">'+drNum(grand)+'</td></tr>';
+    tableEl.innerHTML=t+'</tbody></table>';
+  }
+
+  function drTitle(fStr,tStr){
+    var fmt=function(s){return new Date(s).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}).toUpperCase();};
+    return 'OMSET BANDUNG '+(fStr===tStr?fmt(fStr):fmt(fStr)+' - '+fmt(tStr));
+  }
+
+  /* ===== SHARE WA ===== */
+  function drFmtDate(s){var d=new Date(s);return d.getDate()+'/'+(d.getMonth()+1)+'/'+d.getFullYear();}
+  function drRp(v){v=Math.round((parseFloat(v)||0)*100)/100;return 'Rp. '+(v%1===0?v.toLocaleString('id-ID'):v.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2}));}
+
+  window.drShareWA=function(){
+    if(!DR_LAST.grid){if(typeof alertWarning==='function')alertWarning('Generate laporan dulu!');return;}
+    enqueuePopup({type:'question',title:'Share ke WhatsApp',message:'Pilih level sales untuk laporan:',buttons:[
+      {text:'BDG 1',cls:'primary',action:'BDG 1'},
+      {text:'BDG 2',cls:'primary',action:'BDG 2'},
+      {text:'BDG 3',cls:'secondary',action:'BDG 3'},
+      {text:'BDG 4',cls:'secondary',action:'BDG 4'}
+    ],callback:function(a){
+      if(!a)return;
+      var lines=[];
+      lines.push('Laporan sales '+a);
+      lines.push((DR_LAST.start===DR_LAST.end?drFmtDate(DR_LAST.start):drFmtDate(DR_LAST.start)+'-'+drFmtDate(DR_LAST.end))+' :');
+      lines.push('');
+      DR_CATS.forEach(function(c){lines.push(c.wa+' = '+drRp(DR_LAST.grid[c.label][a]));});
+      window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')),'_blank');
+    }});
+  };
+
+  window.drGenerate=function(){
+    var s=document.getElementById('drStart').value,e=document.getElementById('drEnd').value;
+    if(!s||!e){if(typeof alertWarning==='function')alertWarning('Pilih tanggal dulu!');return;}
+    if(new Date(e)<new Date(s)){if(typeof alertWarning==='function')alertWarning('Tanggal "sampai" tidak boleh sebelum "dari"!');return;}
+    document.getElementById('drTitle').textContent=drTitle(s,e);
+    DR_LAST.grid=drCompute(s,e);DR_LAST.start=s;DR_LAST.end=e;
+    drRender(DR_LAST.grid);
+  };
+
+  window.openDailyReport=function(){
+    if(typeof closeAllMenus==='function')closeAllMenus();
+    if(typeof requireLogin==='function'&&!requireLogin())return;
+    currentReportTab='daily';reportViewActive=true;
+    document.getElementById('historyListView').style.display='none';
+    document.getElementById('historyDetailView').style.display='none';
+    document.getElementById('lkDetailView').style.display='none';
+    var rv=document.getElementById('reportView');
+    rv.classList.add('active');
+    document.querySelectorAll('.rpt-tab-panel').forEach(function(p){p.style.display='none';});
+    var panel=document.getElementById('rptTabDaily');
+    if(!panel){
+      panel=document.createElement('div');
+      panel.id='rptTabDaily';panel.className='rpt-tab-panel';
+      var sIn='width:100%;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:12px;font-family:var(--font-mono)';
+      var sLbl='font-size:9px;font-weight:800;text-transform:uppercase;color:var(--text-light);letter-spacing:.4px;margin-bottom:4px;display:block';
+      var sBtn='height:44px;border:none;border-radius:12px;font-size:12px;font-weight:800;letter-spacing:.3px;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;color:#fff;-webkit-tap-highlight-color:transparent';
+      var sSvg='width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round';
+      panel.innerHTML='<div id="drTitle" style="font-size:14px;font-weight:800;text-align:center;color:var(--primary);text-transform:uppercase;margin:4px 0 14px;line-height:1.3">OMSET BANDUNG</div>'+
+        '<div style="display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-bottom:12px">'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%">'+
+            '<div style="min-width:0"><label style="'+sLbl+'">Dari</label><input type="date" id="drStart" style="'+sIn+'"></div>'+
+            '<div style="min-width:0"><label style="'+sLbl+'">Sampai</label><input type="date" id="drEnd" style="'+sIn+'"></div>'+
+          '</div>'+
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%">'+
+            '<button type="button" onclick="drGenerate()" style="'+sBtn+';background:linear-gradient(135deg,var(--accent),#2563eb);box-shadow:0 5px 14px rgba(37,99,235,.35)"><svg style="'+sSvg+'"><use href="#icon-chart"/></svg> Tampilkan</button>'+
+            '<button type="button" onclick="drShareWA()" style="'+sBtn+';background:linear-gradient(135deg,#25D366,#128C7E);box-shadow:0 5px 14px rgba(37,211,102,.35)"><svg style="'+sSvg+'"><use href="#icon-share"/></svg> Share WA</button>'+
+          '</div>'+
+        '</div>'+
+        '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 10px 10px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch"><div id="drChart"></div></div>'+
+        '<div id="drTable" style="overflow-x:auto;border:1px solid var(--border);border-radius:12px;background:var(--surface);-webkit-overflow-scrolling:touch"></div>';
+      rv.appendChild(panel);
+    }
+    panel.style.display='block';
+    var today=new Date().toISOString().slice(0,10);
+    var s=document.getElementById('drStart'),e=document.getElementById('drEnd');
+    if(!s.value)s.value=today;
+    if(!e.value)e.value=today;
+    document.getElementById('reportViewTitle').innerHTML='<svg><use href="#icon-chart"/></svg>Laporan Harian';
+    drGenerate();
+    if(typeof animateIn==='function')animateIn(rv);
+    scrollTo(0,0);
+  };
+
+  function injectMenuItem(){
+    var dd=document.getElementById('reportDropdown');
+    if(!dd){setTimeout(injectMenuItem,200);return;}
+    if(dd.querySelector('[data-dr="1"]'))return;
+    var item=document.createElement('div');
+    item.className='dropdown-item';
+    item.setAttribute('data-dr','1');
+    item.setAttribute('onclick','openDailyReport()');
+    item.innerHTML='<span class="rd-icon"><svg><use href="#icon-calendar"/></svg></span> Laporan Harian';
+    dd.appendChild(item);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',injectMenuItem);
+  else injectMenuItem();
 })();
 </script>
 </body>
