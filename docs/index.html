@@ -1223,7 +1223,7 @@ body.order-mode .fa-totals .ft-grand .ft-label, body.order-mode .fa-totals .ft-g
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v3.9</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v4.0</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -2519,7 +2519,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='3.9';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='4.0';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return'terbaru';if(VB_STATUS==='update')return'ada v'+VB_SERVER;if(VB_STATUS==='offline')return'offline';return'cek\u2026'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
@@ -2636,7 +2636,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if
       };
     }
   })(WRAP[w])}
-  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.9'}catch(e){}
+  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v4.0'}catch(e){}
   try{var sl=document.querySelector('.sp-load');if(sl)sl.textContent='Memuat sistem\u2026'}catch(e){}
   try{repairAll(document.body)}catch(e){}
   setTimeout(function(){try{repairAll(document.body)}catch(e){}},200);
@@ -4325,6 +4325,364 @@ body:has(#cvMergeView[style*="flex"]) .bottom-nav{transform:translateY(112%);opa
     /* jaring pengaman 5 detik pertama (draft restore dll) */
     var n=0;var iv=setInterval(function(){convertAll();if(++n>20)clearInterval(iv);},250);
   }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v18: (PM) = HARGA NET → TANPA DISKON KATEGORI
+     ========================================================== -->
+<script>
+(function(){
+  function isPMName(s){return /\(PM\)\s*$/i.test(String(s==null?'':s).trim());}
+
+  function install(){
+    if(typeof window.calculateAll!=='function'||typeof window.doSaveTransaction!=='function'){setTimeout(install,100);return;}
+    if(window.calculateAll._pm18)return;
+
+    /* 1) total live di halaman transaksi */
+    window.calculateAll=function(){
+      let subTotal=0,discTotal=0;
+      const discDetails=[];
+      document.querySelectorAll('#inputRows tr').forEach(tr=>{
+        const ts=tr.querySelector('.total-input').value;
+        if(!ts)return;
+        const total=parseMoney(ts);
+        subTotal+=total;
+        if(!isPiMode&&!isPMName(descOf(tr))){ /*PM*/
+          const im=findItemByRow(tr);
+          const rc=im?im.cat:'';
+          let ad=0;
+          if(rc&&currentCustomer&&currentCustomer.disc){
+            const dp=currentCustomer.disc[rc]||0;
+            if(dp>0)ad=dp;
+          }
+          if(ad>0){
+            const da=total*ad/100;
+            discTotal+=da;
+            const ex=discDetails.find(d=>d.cat===rc);
+            if(ex)ex.amount+=da;
+            else discDetails.push({cat:rc,pct:ad,amount:da});
+          }
+        }
+      });
+      const _ongkir=(currentMode==='nota'&&!isPiMode)?(parseDecField('inputOngkir')||0):0;
+      const barangTotal=Math.max(0,subTotal-discTotal);
+      const grandTotal=barangTotal+_ongkir;
+      document.getElementById('subTotal').innerText=fmtCurrencyFull(subTotal);
+      document.getElementById('grandTotal').innerText=fmtCurrencyFull(grandTotal);
+      const dr=document.getElementById('discRow');
+      if(dr){
+        dr.style.display=(discTotal>0&&!isPiMode)?'flex':'none';
+        document.getElementById('discTotalVal').innerText='- '+fmtCurrencyFull(discTotal);
+      }
+      const oi=document.getElementById('inputOngkir');
+      if(oi){
+        if(_ongkir<=0){oi.value=''}else{oi.value=(_ongkir%1===0)?_ongkir.toLocaleString('id-ID'):_ongkir.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2})}
+      }
+      if(isPiMode){document.getElementById('discDetailText').innerText=''}else{
+        if(discDetails.length)document.getElementById('discDetailText').innerHTML='<svg class="ei"><use href="#icon-tag"/></svg> Diskon: '+discDetails.map(d=>d.cat+' '+d.pct+'% = '+fmtCurrencyFull(d.amount)).join(' \u2022 ');
+        else if(subTotal>0)document.getElementById('discDetailText').innerText=currentCustomer?'Tidak ada diskon':'Pilih customer';
+        else document.getElementById('discDetailText').innerText='';
+      }
+    };
+
+    /* 2) popup BAYAR */
+    var oPay=window.openPayPopup;
+    window.openPayPopup=function(){
+      if(!requireLogin())return;
+      if(!currentCustomer)return alertWarning('Pilih customer dulu!');
+      const rows=collectValidRows();
+      if(!rows.length)return alertWarning('Isi barang dulu!');
+      const sub=rows.reduce((s,r)=>s+r.total,0);
+      let disc=0;
+      rows.forEach(r=>{if(isPMName(r.desc))return; /*PM*/ const im=findItemByDesc(r.desc);const cat=im?im.cat:(r.cat||'');if(im&&currentCustomer.disc&&currentCustomer.disc[cat])disc+=r.total*currentCustomer.disc[cat]/100});
+      payRecSubVal=sub;payRecDiscVal=disc;payRecOngkirVal=parseDecField('inputOngkir')||0;payCashUserEdited=false;
+      document.getElementById('payRecSub').innerText=fmtCurrencyFull(sub);
+      const dRow=document.getElementById('payRecDiscRow');
+      dRow.style.display=disc>0?'flex':'none';
+      document.getElementById('payRecDisc').innerText='- '+fmtCurrencyFull(disc);
+      const oRow=document.getElementById('payRecOngkirRow');
+      if(oRow){oRow.style.display=payRecOngkirVal>0?'flex':'none';var oV=document.getElementById('payRecOngkir');if(oV)oV.innerText=fmtCurrencyFull(payRecOngkirVal)}
+      document.getElementById('paySpecialType').value='percent';
+      setMoneyDec('paySpecialValue',0);setMoneyDec('payTransfer',0);
+      payCashUserEdited=false;
+      document.getElementById('payNote').value='';
+      recalcPayModal(true);
+      document.getElementById('payModal').classList.add('open');
+    };
+
+    /* 3) simpan NOTA */
+    window.doSaveTransaction=function(rows,payment,specialDisc){
+      specialDisc=specialDisc||0;
+      rows.sort((a,b)=>(a.cat||'').localeCompare(b.cat||''));
+      const invNo=consumeInvNo('nota');if(!invNo)return invDupWarning();
+      const subTotal=rows.reduce((s,r)=>s+r.total,0);
+      let discTotal=0;
+      rows.forEach(r=>{if(isPMName(r.desc))return; /*PM*/ const item=findItemByDesc(r.desc),cat=item?item.cat:(r.cat||'');if(item&&currentCustomer.disc&&currentCustomer.disc[cat])discTotal+=r.total*currentCustomer.disc[cat]/100});
+      const ongkir=(currentMode==='nota'&&!isPiMode)?(parseDecField('inputOngkir')||0):0;
+      const barangTotal=Math.max(0,subTotal-discTotal-specialDisc);
+      const grandTotal=barangTotal+ongkir;
+      const paid=payment?(payment.cash+payment.transfer):0;
+      const isCash=payment?payment.cash>0:false;
+      const isTransfer=payment?payment.transfer>0:false;
+      let payNote=payment&&payment.note?payment.note:'';
+      const parts=[];
+      if(payment&&payment.cash>0)parts.push('Cash '+fmtCurrency(payment.cash));
+      if(payment&&payment.transfer>0)parts.push('Transfer '+fmtCurrency(payment.transfer));
+      if(!payNote&&parts.length)payNote=parts.join(' + ');
+      if(specialDisc>0)payNote+=(payNote?' | ':'')+'CMM '+fmtCurrency(specialDisc);
+      const payments=(payment&&paid>0)?[{amount:paid,cash:payment.cash||0,transfer:payment.transfer||0,bank:'',ref:'',date:new Date().toISOString(),note:payNote,cmm:specialDisc||0}]:[];
+      const tx={invNo,date:new Date().toISOString(),cust:Object.assign({},currentCustomer),rows,subTotal,discTotal,specialDiscAmount:specialDisc,ongkir:ongkir,grandTotal:barangTotal,finalGrandTotal:grandTotal,isCash,isTransfer,paidAmount:paid,payments,isOrder:false,isRetur:false,isPi:false,isCancelled:false,_source:'manual'};
+      const hist=JSON.parse(localStorage.getItem('txHistory'))||[];
+      hist.unshift(tx);
+      try{localStorage.setItem('txHistory',JSON.stringify(hist))}catch(e){alertDanger('Storage penuh! Gagal menyimpan.')}
+      rows.forEach(r=>{const item=findItemByDesc(r.desc);if(item){if(stockData[item.name]===undefined)stockData[item.name]=0;stockData[item.name]-=r.qty;stockLog.unshift({item:item.name,type:'out',qty:r.qty,note:'Terjual: '+invNo,date:new Date().toISOString()})}});
+      saveStockData();
+      syncToActiveLKReport('invoices',{id:tx.invNo,amount:grandTotal,desc:tx.invNo+' - '+(tx.cust?tx.cust.name:''),date:tx.date});
+      let msg='Tersimpan! <b>'+tx.invNo+'</b>';
+      if(ongkir>0)msg+='<br>Ongkir: <b>'+fmtCurrencyFull(ongkir)+'</b>';
+      if(paid>0){const sisa=Math.max(0,grandTotal-paid);msg+='<br>Dibayar: <b>'+fmtCurrencyFull(paid)+'</b>';if(sisa<=0)msg+='<br><b>LUNAS</b>';else msg+='<br>Sisa: <b>'+fmtCurrencyFull(sisa)+'</b>'}else{msg+='<br>Belum dibayar'}
+      alertSuccess(msg);resetTransactionUI();
+      setTimeout(function(){try{localStorage.removeItem('bioli_draft_v1')}catch(e){}},100);
+    };
+
+    /* 4) simpan ORDER */
+    window.saveOrderTransaction=function(){
+      if(!currentCustomer)return alertWarning('Pilih customer!');
+      const rows=collectValidRows();
+      if(!rows.length)return alertWarning('Isi barang dulu!');
+      showConfirm('Simpan ORDER untuk <b>'+escapeHtml(currentCustomer.name)+'</b>?',cf=>{
+        if(!cf)return;
+        const invNo=consumeInvNo('order');
+        if(!invNo)return invDupWarning();
+        const subTotal=rows.reduce((s,r)=>s+r.total,0);
+        let discTotal=0;
+        rows.forEach(r=>{if(isPMName(r.desc))return; /*PM*/ const item=findItemByDesc(r.desc);const cat=item?item.cat:(r.cat||'');if(item&&currentCustomer.disc&&currentCustomer.disc[cat]){discTotal+=r.total*currentCustomer.disc[cat]/100}});
+        const grandTotal=Math.max(0,subTotal-discTotal);
+        const otx={invNo,date:new Date().toISOString(),cust:Object.assign({},currentCustomer),rows,subTotal,discTotal,specialDiscAmount:0,ongkir:0,grandTotal:grandTotal,finalGrandTotal:grandTotal,isOrder:true,isRetur:false,isPi:false,isCash:false,isTransfer:false,isCancelled:false,paidAmount:0,payments:[],_source:'manual'};
+        const hist=JSON.parse(localStorage.getItem('txHistory'))||[];
+        hist.unshift(otx);
+        try{localStorage.setItem('txHistory',JSON.stringify(hist))}catch(e){alertDanger('Storage penuh!')}
+        syncToActiveLKReport('invoices',{id:otx.invNo,amount:grandTotal,desc:otx.invNo+' (ORDER)',date:otx.date});
+        alertSuccess('Order tersimpan! <b>'+invNo+'</b> \u2022 '+fmtCurrencyFull(grandTotal));
+        resetTransactionUI();
+        setTimeout(function(){try{localStorage.removeItem('bioli_draft_v1')}catch(e){}},100);
+      });
+    };
+
+    /* 5) share WA (faktur/retur/pi/order) */
+    var oShare=window.shareRowsToWA;
+    window.shareRowsToWA=function(rows,cust,opts){
+      opts=opts||{};var mode=opts.mode||'order';var withDisc=(mode==='nota'||mode==='order');
+      var titles={nota:'FAKTUR PENJUALAN',order:'ORDER BARANG',retur:'RETUR BARANG',pi:'PI POTONG'};
+      var groupMeta=[{key:'pertanian',title:'PERTANIAN',emoji:'\uD83C\uDF3E',hint:'Qty \u00D7 Kode \u00D7 Nama \u00D7 Harga \u00D7 Total',label:function(r){return r.desc}},{key:'otomotif',title:'OTOMOTIF',emoji:'\uD83D\uDE97',hint:'Qty \u00D7 Kode \u00D7 Ukuran \u00D7 Harga \u00D7 Total',label:function(r){return(r.item&&r.item.size)||r.desc}},{key:'piston',title:'PISTON',emoji:'\u2699\uFE0F',hint:'Qty \u00D7 Kode \u00D7 Ukuran + Deskripsi \u00D7 Harga \u00D7 Total',label:function(r){var os=(r.item&&r.item.size)||'';var ds=(r.item&&r.item.desc)||r.desc||'';return(os+' '+ds).trim()||r.desc}},{key:'lain',title:'LAINNYA',emoji:'\uD83D\uDCE6',hint:'Qty \u00D7 Kode \u00D7 Nama \u00D7 Harga \u00D7 Total',label:function(r){return r.desc}}];
+      var groups={pertanian:[],otomotif:[],piston:[],lain:[]};
+      var subTotal=0,discTotal=0,discCats={};
+      rows.forEach(function(r){var g=waFormatGroup(r);var discPct=0;if(withDisc&&!isPMName(r.desc)&&cust&&cust.disc&&r.cat)discPct=cust.disc[r.cat]||0; /*PM*/ var gross=(r.qty||0)*(r.price||0);var dAmt=gross*discPct/100;subTotal+=gross;if(dAmt>0){discTotal+=dAmt;var dk=r.cat+' '+discPct+'%';discCats[dk]=(discCats[dk]||0)+dAmt}groups[g].push(r)});
+      var ongkir=(mode==='nota')?(parseDecField('inputOngkir')||0):0;
+      var grand=Math.max(0,subTotal-discTotal)+ongkir;
+      var invNo=((document.getElementById('invPrefix')||{}).textContent||'')+((document.getElementById('invNumInput')||{}).value||'');
+      var tgl=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+      var lines=[];
+      lines.push('*'+(titles[mode]||titles.order)+'* \u2022 PT. BIOLI LESTARI');
+      lines.push('========================');
+      lines.push('\uD83D\uDCC4 '+(invNo||'-')+' \u2022 '+tgl);
+      lines.push('\uD83D\uDC64 '+cust.name+(cust.code?' ('+cust.code+')':''));
+      if(opts.sourceInv)lines.push('\uD83D\uDD17 Nota Asal: '+opts.sourceInv);
+      lines.push('');
+      groupMeta.forEach(function(gm){var arr=groups[gm.key];if(!arr.length)return;lines.push(gm.emoji+' *'+gm.title+'*');lines.push('('+gm.hint+')');arr.forEach(function(r){var gross=(r.qty||0)*(r.price||0);lines.push('\u2022 '+r.qty+' \u00D7 '+(r.code||'-')+' \u00D7 '+gm.label(r)+' \u00D7 '+fmtCurrencyFull(r.price)+' \u00D7 '+fmtCurrencyFull(gross))});lines.push('')});
+      if(discTotal>0){lines.push('\u2702 Diskon: - '+fmtCurrencyFull(discTotal));Object.keys(discCats).forEach(function(k){lines.push('   \u2022 '+k+' = - '+fmtCurrencyFull(discCats[k]))})}
+      if(ongkir>0)lines.push('\uD83D\uDE9A Ongkir: + '+fmtCurrencyFull(ongkir));
+      lines.push('========================');
+      lines.push('\u25B6 *TOTAL = '+fmtCurrencyFull(grand)+'*');
+      window.open('https://wa.me/?text='+encodeURIComponent(lines.join('\n')),'_blank');
+    };
+
+    /* 6) share ORDER (format kode = qty) */
+    var oShareOrd=window.shareOrderToWA;
+    window.shareOrderToWA=function(){
+      if(!currentCustomer)return alertWarning('Pilih customer!');
+      var collected=collectShareRows();
+      if(!collected.length)return alertWarning('Belum ada item!');
+      var sub=0,disc=0;
+      collected.forEach(function(r){
+        var gross=(parseFloat(r.qty)||0)*(parseFloat(r.price)||0);
+        sub+=gross;
+        var dp=(!isPMName(r.desc)&&currentCustomer.disc&&r.cat)?(currentCustomer.disc[r.cat]||0):0; /*PM*/
+        if(dp>0)disc+=gross*dp/100;
+      });
+      var grand=Math.max(0,sub-disc);
+      var txt=buildOrderShareText(currentCustomer,collected,grand);
+      window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+    };
+
+    /* 7) preview faktur draft */
+    window.buildCurrentDraft=function(){
+      var rows=collectValidRows();var sub=0;rows.forEach(function(r){sub+=r.total});
+      var disc=0;
+      rows.forEach(function(r){if(isPMName(r.desc))return; /*PM*/ var im=findItemByDesc(r.desc);var cat=im?im.cat:(r.cat||'');if(im&&currentCustomer&&currentCustomer.disc&&currentCustomer.disc[cat])disc+=r.total*currentCustomer.disc[cat]/100});
+      var ongkir=parseDecField('inputOngkir')||0;
+      var barang=Math.max(0,sub-disc);
+      var gt=barang+ongkir;
+      return{invNo:(document.getElementById('invPrefix').textContent||'')+(document.getElementById('invNumInput').value||''),date:new Date().toISOString(),cust:Object.assign({},currentCustomer),rows:rows,subTotal:sub,discTotal:disc,specialDiscAmount:0,ongkir:ongkir,grandTotal:barang,finalGrandTotal:gt,payments:[],paidAmount:0,isCash:false,isTransfer:false,_draft:true};
+    };
+
+    /* 8) detail riwayat & faktur */
+    window.computeDiscDetails=function(tx){
+      var out=[];
+      if(!tx||!tx.rows||!tx.cust||!tx.cust.disc)return out;
+      tx.rows.forEach(function(r){
+        if(isPMName(r.desc))return; /*PM*/
+        var it=findItemByDesc(r.desc);
+        var rc=it?it.cat:(r.cat||'');
+        if(rc&&tx.cust.disc&&tx.cust.disc[rc]){
+          var dp=tx.cust.disc[rc];
+          if(dp>0){
+            var da=(parseFloat(r.total)||0)*dp/100;
+            var ex=null;
+            for(var i=0;i<out.length;i++){if(out[i].cat===rc){ex=out[i];break}}
+            if(ex)ex.amount+=da;else out.push({cat:rc,pct:dp,amount:da});
+          }
+        }
+      });
+      return out;
+    };
+
+    /* 9) net penjualan di Laporan Luar Kota */
+    window.netRowLK=function(tx,rw){
+      const it=findItemByDesc(rw.desc);
+      const cat=(rw&&rw.cat)||(it&&it.cat)||'';
+      const dp=(tx&&tx.cust&&tx.cust.disc&&!isPMName(rw.desc)&&tx.cust.disc[cat])?tx.cust.disc[cat]:0; /*PM*/
+      return(parseFloat(rw.total)||0)*(1-dp/100);
+    };
+
+    window.calculateAll._pm18=true;
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v19: FILTER FAKTUR = URUT KATEGORI + PROMO/NON-PROMO
+     ========================================================== -->
+<script>
+(function(){
+  function isPM(s){return /\(PM\)\s*$/i.test(String(s==null?'':s).trim());}
+
+  function install(){
+    if(typeof window.sortRowsByCategory!=='function'){setTimeout(install,100);return;}
+    if(window.sortRowsByCategory._v19)return;
+
+    window.sortRowsByCategory=function(){
+      if(currentMode==='order')return;
+      var tbody=document.getElementById('inputRows');
+      var rows=Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+      var filled=[],empty=[];
+      rows.forEach(function(tr){
+        var d=descOf(tr);
+        if(d)filled.push({tr:tr,cat:(tr.querySelector('.cat-input').value||'').trim().toUpperCase()||'UMUM',pm:isPM(d)?1:0});
+        else empty.push(tr);
+      });
+      if(!filled.length)return alertWarning('Tidak ada item untuk diurutkan');
+
+      if(!isSortedByCategory){
+        originalRowOrder=filled.map(function(r){return r.tr;});
+        /* urut: 1) kategori  2) non-promo dulu, baru (PM) */
+        filled.sort(function(a,b){return a.cat.localeCompare(b.cat)||(a.pm-b.pm);});
+        isSortedByCategory=true;
+        var btn=document.getElementById('btnSecondaryAction');
+        btn.classList.add('active');
+        btn.innerHTML='<svg><use href="#icon-check"/></svg> Terurut';
+      }else{
+        if(originalRowOrder)filled.sort(function(a,b){return originalRowOrder.indexOf(a.tr)-originalRowOrder.indexOf(b.tr);});
+        isSortedByCategory=false;
+        var btn2=document.getElementById('btnSecondaryAction');
+        btn2.classList.remove('active');
+        btn2.innerHTML='<svg><use href="#icon-sort"/></svg> Filter';
+      }
+
+      tbody.innerHTML='';
+      filled.forEach(function(i){tbody.appendChild(i.tr);});
+      empty.forEach(function(tr){tbody.appendChild(tr);});
+      renumberAllRows();
+    };
+    window.sortRowsByCategory._v19=true;
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v20: FIX LK — transaksi sebelum set tanggal ikut kehitung
+     (backfill syncedData dari riwayat, tiap kali laporan dibuka)
+     ========================================================== -->
+<script>
+(function(){
+  function syncLKReport(r){
+    if(!r||!r.departDate||!r.returnDate)return false;
+    if(!r.syncedData)r.syncedData={invoices:[],payments:[],stock:[],expenses:[]};
+    var dep=new Date(r.departDate);dep.setHours(0,0,0,0);
+    var ret=new Date(r.returnDate);ret.setHours(23,59,59,999);
+    var changed=false;
+    var ha=JSON.parse(localStorage.getItem('txHistory'))||[];
+
+    /* buang entri bertanggal yang di luar periode (kalau tanggal diubah menyempit) */
+    ['invoices','payments'].forEach(function(t){
+      var before=(r.syncedData[t]||[]).length;
+      r.syncedData[t]=(r.syncedData[t]||[]).filter(function(e){
+        if(!e.date)return true;
+        var d=new Date(e.date);
+        return d>=dep&&d<=ret;
+      });
+      if(r.syncedData[t].length!==before)changed=true;
+    });
+
+    /* backfill: nota + pembayaran yang belum masuk, tapi tanggalnya di dalam periode */
+    ha.forEach(function(tx){
+      if(tx.isCancelled)return;
+      if(typeof lkInclude==='function'&&!lkInclude(tx))return;
+      if(!tx.isRetur&&!tx.isPi){
+        var td=new Date(tx.date);
+        if(td>=dep&&td<=ret&&!r.syncedData.invoices.some(function(i){return i.id===tx.invNo})){
+          r.syncedData.invoices.push({id:tx.invNo,type:'invoices',amount:tx.finalGrandTotal||tx.grandTotal||0,desc:tx.invNo+(tx.isOrder?' (ORDER)':'')+' - '+(tx.cust?tx.cust.name:''),date:tx.date,syncedAt:new Date().toISOString()});
+          changed=true;
+        }
+      }
+      (tx.payments||[]).forEach(function(p,idx){
+        var pd=new Date(p.date);
+        if(pd>=dep&&pd<=ret){
+          var pid=tx.invNo+'_pay_'+idx;
+          if(!r.syncedData.payments.some(function(x){return x.id===pid})){
+            r.syncedData.payments.push({id:pid,type:'payments',amount:p.amount||0,desc:tx.invNo+' - '+(p.note||''),date:p.date,syncedAt:new Date().toISOString()});
+            changed=true;
+          }
+        }
+      });
+    });
+
+    if(changed){try{localStorage.setItem('lkReports',JSON.stringify(lkReports))}catch(e){}}
+    return changed;
+  }
+
+  function syncAllLK(){
+    if(typeof lkReports==='undefined'||!lkReports||!lkReports.length)return;
+    lkReports.forEach(function(r){syncLKReport(r);});
+  }
+
+  function install(){
+    if(typeof window.viewLKReportDetail!=='function'){setTimeout(install,100);return;}
+    if(window.viewLKReportDetail._lk20)return;
+    ['viewLKReportDetail','updateLKSyncUI','renderLKHistory'].forEach(function(n){
+      var o=window[n];
+      if(typeof o!=='function'||o._lk20)return;
+      window[n]=function(){syncAllLK();return o.apply(this,arguments);};
+      window[n]._lk20=true;
+    });
+  }
+
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
   else install();
 })();

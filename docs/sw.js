@@ -1,7 +1,7 @@
 /* ============================================================
-   sw.js — Service Worker · PT. BIOLI LESTARI  (v3.9)
+   sw.js — Service Worker · PT. BIOLI LESTARI  (v4.0)
    ============================================================ */
-const CACHE       = 'bioli-v3.9';
+const CACHE       = 'bioli-v4.0';
 const NAV_TIMEOUT = 3500;
 const CORE = [
   './', './index.html', './manifest.json',
