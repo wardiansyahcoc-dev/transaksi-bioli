@@ -1,15 +1,15 @@
 /* ============================================================
-   sw.js — Service Worker · PT. BIOLI LESTARI  (v3.7)
+   sw.js — Service Worker · PT. BIOLI LESTARI  (v3.8)
    Navigasi      : network-first (race timeout) + fallback cache
    version.json  : network-only  (cek update selalu akurat)
    same-origin   : stale-while-revalidate
    cross-origin  : cache-first   (CDN: font / xlsx / html2canvas)
    ============================================================ */
-const CACHE       = 'bioli-v3.7';
+const CACHE       = 'bioli-v3.8';
 const NAV_TIMEOUT = 3500;
 const CORE = [
   './', './index.html', './manifest.json',
-  './icon.svg', './icon-192.png', './icon-152.png'
+  './icon-512.png', './icon.svg'
 ];
 
 /* ---- lifecycle ---- */
@@ -86,6 +86,7 @@ self.addEventListener('fetch', (e) => {
   if (req.method !== 'GET') return; // POST/PUT dll → lewat network
   let path = '';
   try { path = new URL(req.url).pathname; } catch (_) { return; }
+
   // 1) version.json: selalu network (jangan sampai ke-cache)
   if (path.endsWith('/version.json') || path === '/version.json') { e.respondWith(fetch(req)); return; }
   // 2) navigasi dokumen: network-first

@@ -1,7 +1,7 @@
 {
-  "version": "3.7",
-  "releaseDate": "2026-08-02",
+  "version": "3.8",
+  "releaseDate": "2026-08-06",
   "minVersion": "3.0",
   "forceUpdate": false,
-  "notes": "v3.7: icon aplikasi diperbarui (logo resmi), sinkronisasi manifest & SW, perapihan PWA."
+  "notes": "v3.8: icon aplikasi pakai logo asli (icon-512.png), cache SW di-refresh (bioli-v3.8), manifest dirapikan."
 }
