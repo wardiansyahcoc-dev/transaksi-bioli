@@ -4,7 +4,7 @@
   "description": "Sistem transaksi, stok, riwayat & laporan PT. Bioli Lestari. Berjalan offline (PWA).",
   "lang": "id",
   "dir": "ltr",
-  "id": "/",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
