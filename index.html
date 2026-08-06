@@ -1223,7 +1223,7 @@ body.order-mode .fa-totals .ft-grand .ft-label, body.order-mode .fa-totals .ft-g
       </svg>
     </div>
     <div class="sp-word">PT. BIOLI LESTARI</div>
-    <div class="sp-tag">Sistem Transaksi &#x2022; v3.8</div>
+    <div class="sp-tag">Sistem Transaksi &#x2022; v3.9</div>
     <div class="sp-bar"><span class="sp-barfill"></span></div>
     <div class="sp-load">Memuat sistem&#x2026;</div>
     <div class="sp-fallback" id="splashFallbackNote">Memuat lebih lama dari biasanya. Jika tertahan, buka file ini dengan <b>Chrome</b> atau <b>Firefox</b>.</div>
@@ -2519,7 +2519,7 @@ window.addEventListener('beforeunload',function(e){if(loginDuration==='session')
 window.addEventListener('pagehide',function(){if(loginDuration==='session')sessionStorage.removeItem('loginSession')});
 document.addEventListener('visibilitychange',()=>{if(document.hidden||!isUnlocked)return;var memValid=loginDuration!=='session'&&loginExpireAt>0&&Date.now()<loginExpireAt;if(memValid){try{localStorage.setItem('loginSession','active');localStorage.setItem('loginExpireAt',''+loginExpireAt);localStorage.setItem('loginDuration',loginDuration)}catch(_){}return}if(!checkLoginSession()){isUnlocked=false;updateLoginUI();alertWarning('Sesi berakhir. Login kembali.')}});
 
-var APP_VERSION='3.8';var VB_STATUS='idle';var VB_SERVER=null;
+var APP_VERSION='3.9';var VB_STATUS='idle';var VB_SERVER=null;
 function vb_cmp(a,b){a=String(a||'0').split('.');b=String(b||'0').split('.');for(var i=0;i<3;i++){var x=parseInt(a[i]||0,10),y=parseInt(b[i]||0,10);if(x!==y)return x<y?-1:1}return 0}
 function vb_statusText(){if(VB_STATUS==='ok')return'terbaru';if(VB_STATUS==='update')return'ada v'+VB_SERVER;if(VB_STATUS==='offline')return'offline';return'cek\u2026'}
 function vb_injectMenuRow(){var m=document.getElementById('modeMenu');if(!m)return;var slot=m.querySelector('#vbSlot');var row=document.createElement('div');row.className='dropdown-item vb-menu-row';row.setAttribute('onclick','vb_tap()');row.innerHTML='<span class="vb-dot '+VB_STATUS+'"></span><span class="vb-ver">v'+APP_VERSION+'</span><span class="vb-st '+VB_STATUS+'">'+vb_statusText()+'</span>';if(slot){slot.innerHTML='';slot.appendChild(row)}else{var old=m.querySelector('.vb-menu-row');if(old)old.remove();m.appendChild(row)}}
@@ -2636,7 +2636,7 @@ document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){if
       };
     }
   })(WRAP[w])}
-  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.8'}catch(e){}
+  try{var st=document.querySelector('.sp-tag');if(st)st.textContent='Sistem Transaksi \u2022 v3.9'}catch(e){}
   try{var sl=document.querySelector('.sp-load');if(sl)sl.textContent='Memuat sistem\u2026'}catch(e){}
   try{repairAll(document.body)}catch(e){}
   setTimeout(function(){try{repairAll(document.body)}catch(e){}},200);
@@ -4099,6 +4099,234 @@ body:has(#cvMergeView[style*="flex"]) .bottom-nav{transform:translateY(112%);opa
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',injectMenuItem);
   else injectMenuItem();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v14: CMM HANYA DARI PELUNASAN (bukan saat simpan faktur)
+     ========================================================== -->
+<script>
+(function(){
+  function fixLabel(){
+    try{
+      document.querySelectorAll('.lk-auto-l').forEach(function(el){
+        if((el.textContent||'').indexOf('CMM = Potongan Cash')>=0){
+          el.innerHTML='<svg class="ei"><use href="#icon-scissors"/></svg> CMM = Potongan saat pelunasan';
+        }
+      });
+    }catch(e){}
+  }
+
+  function install(){
+    if(typeof window.computeLKAuto!=='function'){setTimeout(install,100);return;}
+    if(window.computeLKAuto._cmmPatched)return;
+
+    var orig=window.computeLKAuto;
+    window.computeLKAuto=function(r){
+      var res=orig.apply(this,arguments);
+      if(res&&typeof res==='object'){
+        /* diskon kategori saat simpan faktur TIDAK lagi dihitung sebagai CMM */
+        res.cmmCash=0;
+        /* CMM hanya dari pelunasan (p.cmm pada payments) */
+        res.cmmTotal=res.cmmKhusus||0;
+      }
+      setTimeout(fixLabel,0);
+      return res;
+    };
+    window.computeLKAuto._cmmPatched=true;
+
+    /* rapikan label setelah detail LK dirender */
+    if(typeof window.viewLKReportDetail==='function'&&!window.viewLKReportDetail._cmmPatched){
+      var ov=window.viewLKReportDetail;
+      window.viewLKReportDetail=function(){var r=ov.apply(this,arguments);setTimeout(fixLabel,30);return r;};
+      window.viewLKReportDetail._cmmPatched=true;
+    }
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v15: ATURAN BARU — JANGAN BLOKIR FAKTUR CUSTOMER JATUH TEMPO
+     (blokir >15 hari dihapus; hanya peringatan konfirmasi)
+     ========================================================== -->
+<script>
+(function(){
+  function install(){
+    if(typeof window.checkCustomerOverdue!=='function'){setTimeout(install,100);return;}
+    if(window.checkCustomerOverdue._noBlock)return;
+    window.checkCustomerOverdue=function(code){
+      var ha=JSON.parse(localStorage.getItem('txHistory'))||[];
+      var now=new Date();now.setHours(0,0,0,0);
+      var maxOver=0,list=[];
+      ha.forEach(function(tx){
+        if(tx.isCancelled||tx.isRetur||tx.isPi||tx.isOrder)return;
+        if(!tx.cust||tx.cust.code!==code)return;
+        if(getRemainingBalance(tx,ha)<=0)return;
+        var due=notaDueDate(tx);
+        if(!due)return;
+        var over=calDaysDiff(now,due);
+        if(over>0){list.push({invNo:tx.invNo,days:over});if(over>maxOver)maxOver=over;}
+      });
+      if(!list.length)return{blocked:false,warn:false,maxDays:0,list:[]};
+      /* ATURAN BARU: tidak pernah blokir — hanya peringatan */
+      return{blocked:false,warn:true,maxDays:maxOver,list:list};
+    };
+    window.checkCustomerOverdue._noBlock=true;
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v16: NAMA BARANG PANJANG → 2 BARIS (tanpa titik-titik)
+     ========================================================== -->
+<style id="v16-css">
+#page-input #transTable textarea.desc-input{
+  display:block;width:100%;
+  height:auto;min-height:1.7em;max-height:3.1em;
+  line-height:1.3;
+  padding:3px 6px;
+  resize:none;
+  overflow-y:auto;
+  white-space:normal !important;
+  word-break:break-word;
+  text-overflow:clip !important;
+}
+</style>
+<script>
+(function(){
+  function resizeTa(ta){
+    try{
+      ta.style.height='auto';
+      var lh=parseFloat(getComputedStyle(ta).lineHeight)||14;
+      var max=lh*2+6; /* maksimal 2 baris */
+      ta.style.height=Math.min(ta.scrollHeight,max)+'px';
+    }catch(e){}
+  }
+  function resizeAll(){
+    document.querySelectorAll('#inputRows textarea.desc-input').forEach(resizeTa);
+  }
+
+  /* ganti input.desc-input jadi textarea (biar bisa 2 baris) */
+  function convertDesc(tr){
+    if(!tr)return;
+    var inp=tr.querySelector('input.desc-input');
+    if(!inp)return;
+    var ta=document.createElement('textarea');
+    ta.className=inp.className;
+    ta.rows=1;
+    ta.setAttribute('autocomplete','off');
+    ta.spellcheck=false;
+    if(inp.dataset.name)ta.dataset.name=inp.dataset.name;
+    ta.value=inp.value;
+    ta.onfocus=function(){currentDescInput=ta;hideInlineAcListForce();};
+    ta.oninput=function(){
+      if(ta.value.indexOf('\n')>=0)ta.value=ta.value.replace(/\n+/g,' ');
+      currentDescInput=ta;searchItemInRow(ta);resizeTa(ta);
+    };
+    ta.onkeydown=function(e){handleDescKeydown(e,ta);};
+    ta.onblur=function(){autoCapitalizeAndCheckPrice(ta);resizeTa(ta);};
+    inp.replaceWith(ta);
+    resizeTa(ta);
+  }
+
+  function install(){
+    if(typeof window.addNewRowDOM!=='function'){setTimeout(install,100);return;}
+    if(window.addNewRowDOM._v16)return;
+
+    var oAdd=window.addNewRowDOM;
+    window.addNewRowDOM=function(){
+      var r=oAdd.apply(this,arguments);
+      var tbody=document.getElementById('inputRows');
+      convertDesc(tbody?tbody.lastElementChild:null);
+      return r;
+    };
+    window.addNewRowDOM._v16=true;
+
+    /* setelah render / isi otomatis, samakan tinggi semua sel */
+    ['renderRowsToDOM','applySelectedItem','autoCapitalizeAndCheckPrice','loadModeState'].forEach(function(n){
+      var o=window[n];
+      if(typeof o!=='function'||o._v16)return;
+      window[n]=function(){var r=o.apply(this,arguments);setTimeout(resizeAll,0);return r;};
+      window[n]._v16=true;
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
+})();
+</script>
+<!-- ==========================================================
+     PATCH v17: FIX v16 — nama panjang 2 baris (MutationObserver)
+     ========================================================== -->
+<style id="v17-css">
+#page-input #transTable textarea.desc-input{
+  display:block;width:100%;
+  height:auto;min-height:1.7em;max-height:3.1em;
+  line-height:1.3;
+  padding:3px 6px;
+  resize:none;
+  overflow-y:auto;
+  white-space:normal !important;
+  word-break:break-word;
+  text-overflow:clip !important;
+}
+</style>
+<script>
+(function(){
+  function resizeTa(ta){
+    try{
+      ta.style.height='auto';
+      var lh=parseFloat(getComputedStyle(ta).lineHeight)||14;
+      var max=lh*2+6; /* maksimal 2 baris */
+      ta.style.height=Math.min(ta.scrollHeight,max)+'px';
+    }catch(e){}
+  }
+  function resizeAll(){
+    document.querySelectorAll('#inputRows textarea.desc-input').forEach(resizeTa);
+  }
+  function convertDesc(tr){
+    if(!tr)return;
+    var inp=tr.querySelector('input.desc-input');
+    if(!inp)return;
+    var ta=document.createElement('textarea');
+    ta.className=inp.className;
+    ta.rows=1;
+    ta.setAttribute('autocomplete','off');
+    ta.spellcheck=false;
+    if(inp.dataset.name)ta.dataset.name=inp.dataset.name;
+    ta.value=inp.value;
+    ta.onfocus=function(){currentDescInput=ta;hideInlineAcListForce();};
+    ta.oninput=function(){
+      if(ta.value.indexOf('\n')>=0)ta.value=ta.value.replace(/\n+/g,' ');
+      currentDescInput=ta;searchItemInRow(ta);resizeTa(ta);
+    };
+    ta.onkeydown=function(e){handleDescKeydown(e,ta);};
+    ta.onblur=function(){autoCapitalizeAndCheckPrice(ta);resizeTa(ta);};
+    inp.replaceWith(ta);
+    resizeTa(ta);
+  }
+  function convertAll(){
+    document.querySelectorAll('#inputRows input.desc-input').forEach(function(i){
+      convertDesc(i.closest('tr'));
+    });
+    resizeAll();
+  }
+  function install(){
+    var tbody=document.getElementById('inputRows');
+    if(!tbody){setTimeout(install,120);return;}
+    convertAll();
+    /* jaga tabel: baris baru / restore draft / ganti mode → langsung diconvert */
+    try{
+      new MutationObserver(function(){convertAll();}).observe(tbody,{childList:true,subtree:true});
+    }catch(e){
+      setInterval(convertAll,300);
+    }
+    /* jaring pengaman 5 detik pertama (draft restore dll) */
+    var n=0;var iv=setInterval(function(){convertAll();if(++n>20)clearInterval(iv);},250);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);
+  else install();
 })();
 </script>
 </body>
